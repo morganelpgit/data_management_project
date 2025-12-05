@@ -3,3 +3,165 @@ title: "Morgane"
 format: html
 editor: visual
 ---
+
+## Setup
+
+```{r}
+
+here::i_am("data_management_project.Rproj")
+
+library(tidyverse)
+library(here)
+library(vroom)
+library(dplyr)
+library(tidyr)
+library(stringr)
+```
+
+## Import
+### Net investments 
+
+```{r}
+invest <- vroom(here("data","Net_direct_investments.csv"), col_types="c")
+
+invest <- invest |>
+  rename_with(~ ifelse(
+    str_detect(., "BPS\\.M\\.N\\.[A-Z]{2}\\.W1"),
+    str_extract(., "(?<=BPS\\.M\\.N\\.)[A-Z]{2}(?=\\.)"),
+    .
+  ))
+
+invest <- invest|>
+  mutate(DATE2 = as.Date(DATE, format = "%Y/%m/%d"))
+
+invest <- invest |>
+  select(DATE, AT, BE, CY, DE, EE, FI, FR, GR, HR, IE, IT, LT, LU, MT, NL, PT, SK, SI, ES)
+
+invest <- invest |>
+    pivot_longer(
+    cols = -DATE,
+    names_to = "Country",
+    values_to = "int"
+  )
+
+
+#après transfo data 2 en 1 seul data
+data2 <- left_join(data,invest,by=join_by(DATE,Country))
+
+```
+
+
+### HICP 
+
+```{r}
+HICP <- vroom(here("data","HICP.csv"),
+              delim = ",") #problem of delimitation
+
+HICP <- HICP |>
+  rename_with(~ ifelse(
+    str_detect(., "ICP\\.M\\.[A-Z]{2}\\."),   # detect all columns with ICP.M.XX.
+    str_extract(., "(?<=ICP\\.M\\.)[A-Z]{2}(?=\\.)"),  # extract XX
+    .
+  ))
+
+HICP <- HICP |>
+  mutate(DATE = as.Date(DATE, format = "%Y/%m/%d"))
+
+HICP <- HICP |>
+  filter(DATE > as.Date("2014-10-01")) |>
+  select(DATE, AT, BE, CY, DE, EE, FI, FR, GR, HR, IE, IT, LV, LT, LU, MT, NL, PT, SK, SI, ES)
+
+HICP <- HICP |>
+  pivot_longer(
+    cols = -DATE,
+    names_to = "Country",
+    values_to = "HICP"
+  )
+
+data3 <- left_join(data, HICP, by = c("DATE", "Country"))
+```
+
+### ST interest rate (Euribor)
+
+We import two short-term interest rates, common to all euro-area countries and set by the ECB, with maturities of three and six months.
+
+We then compute the real interest rate for each country. Using the Fisher approximation, the real rate is obtained by subtracting a country's expected inflation rate from the nominal interest rate.
+
+```{r}
+ST3M_int <- vroom(here("data","Euribor_3M.csv"))
+
+colnames(ST3M_int) <- c("DATE","TIME PERIOD","ST3M")
+
+ST3M_int <- ST3M_int |>
+  mutate(ST3M = as.numeric(ST3M))
+
+ST3M_int <- ST3M_int |>
+  mutate(
+    DATE = as.Date(DATE, format = "%Y-%m-%d")
+  ) |>
+  filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
+
+ST3M_int <- ST3M_int |>
+  select(DATE, ST3M)
+
+# 6 month 
+
+ST6M_int <- vroom(here("data","Euribor_6M.csv"))
+
+colnames(ST6M_int) <- c("DATE","TIME PERIOD","ST6M")
+
+ST6M_int <- ST6M_int |>
+  mutate(ST6M = as.numeric(ST6M))
+
+ST6M_int <- ST6M_int |>
+  mutate(
+    DATE = as.Date(DATE, format = "%Y-%m-%d")
+  ) |>
+  filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
+
+ST6M_int <- ST6M_int |>
+  select(DATE, ST6M)
+
+
+data4 <- left_join(data3,ST3M_int,by="DATE")
+
+data4 <- left_join(data4,ST6M_int,by="DATE")
+```
+
+### LT interest rates
+
+As well as the columns "Date", "Time Period" and the country values, there are two aggregates of code I9 (Euro area 20 (fixed composition) as of 1 January 2023) and U2 (Euro area changing composition), hence 24 columns. 
+
+```{r}
+LT10Y_int <- vroom(here("data","LT_interest_rate.csv"))
+
+LT10Y_int <- LT10Y_int |>
+  rename_with(~ ifelse(
+    str_detect(., "IRS\\.M\\.[A-Z0-9]{2}\\."),
+    str_extract(., "(?<=IRS\\.M\\.)[A-Z0-9]{2}(?=\\.)"),
+    .
+  ))
+
+LT10Y_int <- LT10Y_int |>
+  mutate(DATE = as.Date(DATE, format = "%Y-%m-%d"))
+
+LT10Y_int <- LT10Y_int |>
+  filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30")) 
+
+LT10Y_int <- LT10Y_int |>
+  select(DATE, AT, BE, CY, DE, EE, ES, FI, FR, GR, HR, IE, IT, LT, LU, LV, MT, NL, PT, SI, SK, U2
+  ) # we don't select I9
+
+LT10Y_int <- LT10Y_int |>
+  pivot_longer(
+    cols = -DATE,
+    names_to = "Country",
+    values_to = "LT10Y_int"
+  )
+
+data5 <- left_join(data4, LT10Y_int, by = join_by(DATE, Country))
+```
+
+
+
+
