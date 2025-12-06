@@ -4,23 +4,111 @@ author: "Yueran SUN"
 format: html
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+## Set-up & Loading data 
 
 ```{r}
-1 + 1
+
+here::i_am("data_management_project.Rproj")
+library(tidyverse)
+library(here)
+
 ```
 
-You can add options to executable code like this 
+Load Data: Historical data of asset puchases by the ECB (Downloaded from the webpage https://www.ecb.europa.eu/mopo/implement/app/html/index.en.html) & Data cleaning
 
 ```{r}
-#| echo: false
-2 * 2
+
+#We load the .csv file directly downloaded from the ECB website titled "APP_breakdown_history.csv"
+QE_mnet <- read_csv(here("data", "APP_breakdown_history.csv"))
+
+#The title row and first two rows of the original .csv file are empty except for some textual descriptions of the file, therefore: 
+
+#First, we remove the first two rows 
+QE_mnet <- QE_mnet |>
+  slice(-(1:2))|>
+  slice(-(135:137))
+#Second, the names of the variables need to be manually added. 
+
+names(QE_mnet)[1] <- paste("Year")
+names(QE_mnet)[2] <- paste("Month")
+names(QE_mnet)[3] <- paste("ABSPP") #Asset-backed securities purchase programme
+names(QE_mnet)[4] <- paste("CBPP3") #Covered bond purchase programme 3
+names(QE_mnet)[5] <- paste("CSPP") #Corporate Sector purchase programme
+names(QE_mnet)[6] <- paste("PSPP") #Public Sector purchase programme
+
+#All data starting from the 7th column describe quarterly adjustments and total holdings, which, for this project specifically, are useless, which is why we remove them. 
+QE_mnet <- QE_mnet|>
+  select(1:6)
+
+#In the original .csv, the year column is empty for all months except for the first month of each year, and there is no date column. Therefore, dates need to be manually added to facilitate later computation. 
+
+
+#First, we add the missing years. 
+
+QE_mnet <- QE_mnet |>
+  fill(Year, .direction = "down")
+
+#Second, we manually create a date column titled "DATE" (because later we will merge with other datasets with a date column of the same title) containing the last day of each month, for all values are calculated on the last day of the month
+
+QE_mnet <- QE_mnet |>
+  mutate(
+    Month_num = match(Month, month.name),
+    Month_num = ifelse(is.na(Month_num), match(Month, month.abb), Month_num),
+    date_first = make_date(year = Year, month = Month_num, day = 1),
+    last_day = days_in_month(date_first),
+    DATE = paste0(Year,"/", Month_num, "/", last_day)
+  ) |>
+  select(-Month_num, -date_first, -last_day)
+
+
+QE_mnet <- QE_mnet|>
+  mutate(DATE = as.Date(DATE, format = "%Y/%m/%d"))
+
+
+#Last, since we are only interested in the magnitude of quantitative easing carried out by the BCE, the specific amounts of each type of asset are irrelevant for this project. Therefore, we add them to get the ECB's monthly net purchase value. 
+
+#First, we convert them from character to numerical format 
+QE_mnet <- QE_mnet|>
+  mutate(ABSPP = as.numeric(ABSPP),
+         CBPP3 = as.numeric(CBPP3),
+         CSPP = as.numeric(CSPP),
+         PSPP = as.numeric(PSPP))
+#Second, we add them together
+QE_mnet <- QE_mnet|>
+  mutate(Mnet = ABSPP+CBPP3+CSPP+PSPP)
+
+
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+Loading Data: Corporate borrowing rates per country (downloaded from the ECB data portal)
+Data Cleaning: Change variable names & Pivot from wide to long format
+
+```{r}
+
+corp_int <- read_csv(here("data","corp_int.csv"))
+
+library(stringr)
+
+corp_int <- corp_int |>
+  rename_with(~ ifelse(
+    str_detect(., "MIR\\.M\\.[A-Z]{2}\\."),
+    str_extract(., "(?<=MIR\\.M\\.)[A-Z]{2}(?=\\.)"),
+    .
+  ))
+
+names(corp_int)[23] <- paste("U2")
+
+corp_int <- corp_int|>
+  mutate(DATE = as.Date(DATE, format = "%Y/%m/%d"))
+
+corp_int <- corp_int|>select(!`TIME PERIOD`)
+
+corp_int <- corp_int|>
+    pivot_longer(
+    cols = -DATE,
+    names_to = "Country",
+    values_to = "int"
+  )
+
+```
+
