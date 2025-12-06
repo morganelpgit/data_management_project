@@ -132,3 +132,58 @@ qe_int <- QE_mnet|>
 
 ```
 
+Graphical representation of target variable
+
+```{r}
+
+library(dplyr)
+library(ggplot2)
+
+#Preliminary visusalization of varying differences between corporate borrowing rates of each country and the EMU average 
+
+emu_avg_rates <- corp_int |>
+  drop_na() |>
+  filter(Country == "U2") |>
+  select(DATE, EMU_Avg = int)
+
+corp_int_deviation <- corp_int |>
+  drop_na() |>
+  filter(Country != "U2") |>
+  left_join(emu_avg_rates, by = "DATE") |>
+  mutate(Deviation = int - EMU_Avg) |>
+  select(-EMU_Avg)
+
+corp_int_deviation|>
+  ggplot(aes(x = DATE, y = Deviation, group = Country, color = Country)) +
+  geom_line(alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  labs(
+    title = "Corporate Borrowing Rate Deviation from EMU Average",
+    x = "Month/Year",
+    y = "Deviation from EMU Average Rate (Percentage Points)"
+  ) +
+  theme_minimal()
+
+#Preliminary visualization of the cross-country differences between their relationships with QE amounts
+
+library(ggeffects)
+
+qe_int <- qe_int |>
+  arrange(Country, DATE)
+
+qe_int <- qe_int |>
+  group_by(Country) |>
+  mutate(Mnet_lag1 = lag(Mnet, 1)) |> 
+  ungroup()
+
+qe_nona <- drop_na(qe_int)
+
+fit = lm(formula = int ~Mnet_lag1*Country, data=qe_nona)
+pred = ggpredict(fit, terms = c("Mnet_lag1","Country"))
+plot(pred) +
+  scale_color_viridis_d(option = "turbo") +
+  ggtitle(NULL)
+
+```
+
+
