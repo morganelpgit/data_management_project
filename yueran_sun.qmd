@@ -16,6 +16,8 @@ library(here)
 
 Load Data: Historical data of asset puchases by the ECB (Downloaded from the webpage https://www.ecb.europa.eu/mopo/implement/app/html/index.en.html) & Data cleaning
 
+Data cleaning: Remove useless data & Adding dates & Converting variables to proper formats
+
 ```{r}
 
 #We load the .csv file directly downloaded from the ECB website titled "APP_breakdown_history.csv"
@@ -80,14 +82,16 @@ QE_mnet <- QE_mnet|>
 
 ```
 
-Loading Data: Corporate borrowing rates per country (downloaded from the ECB data portal)
-Data Cleaning: Change variable names & Pivot from wide to long format
+Loading Data: Corporate borrowing rates per country (downloaded from the ECB data portal) 
 
+Data cleaning: Renaming variables & Pivoting
 ```{r}
 
 corp_int <- read_csv(here("data","corp_int.csv"))
 
 library(stringr)
+
+#The original .csv file is in wide format, with one column for each country. The problem is that the name of each column is a string containing the letter code of the variable and the iso2 code of the country. Therefore, we extract the iso2 codes from the string. 
 
 corp_int <- corp_int |>
   rename_with(~ ifelse(
@@ -96,13 +100,18 @@ corp_int <- corp_int |>
     .
   ))
 
+
+#The previous function does not the code "U2" (which represents the EU) because it does not contain only letters from the alphabet, therefore, we manually add it. 
 names(corp_int)[23] <- paste("U2")
 
+#We change the date format and remove the useless "TIME PERIOD" column 
 corp_int <- corp_int|>
   mutate(DATE = as.Date(DATE, format = "%Y/%m/%d"))
 
 corp_int <- corp_int|>select(!`TIME PERIOD`)
 
+
+#We pivot from long to wide, so that now we have observations in country-months
 corp_int <- corp_int|>
     pivot_longer(
     cols = -DATE,
