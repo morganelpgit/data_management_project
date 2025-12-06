@@ -121,3 +121,14 @@ corp_int <- corp_int|>
 
 ```
 
+Merging corporate interest rates & QE datasets 
+
+```{r}
+
+qe_int <- QE_mnet|>
+  left_join(
+    corp_int
+  )
+
+```
+
