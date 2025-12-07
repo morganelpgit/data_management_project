@@ -226,7 +226,7 @@ We start by loading the dataset from our data folder, and computing the original
 
 Two columns are for the date : `DATE` as a date,`TIME PERIOD` as a character. The others are the values for the twenty countries of the Euro Union. Each of these column corresponds to a full ECB series name, for example: `Financial account, Direct Investment, Net (BPS.M.N.IE.W1.S1.S1.T.N.FA.D.F5._Z.EUR._T._X.N.ALL)`. We rename each column by extracting the two letter country code from the series name, using the function ifelse.
 
-Next, we select all columns except `TIME PERIOD` (we will use `DATE` for joining) and Hungary's values, as this country's target variable is not available. We also filter the observations from October 2014 to November 2025.
+Next, we select all columns except `TIME PERIOD` (we will use `DATE` for joining). We also filter the observations from October 2014 to November 2025.
 
 Finally, we transform the dataset from wide format (months as rows, countries as columns) to long format (months and countries as rows), and left join to the full `data` dataset.
 
@@ -261,7 +261,6 @@ invest <- invest |>
 # We select the variables and filter the date
 invest <- invest |>
   select(!`TIME PERIOD`) |>
-  select(!HR) |> 
   filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
 
 # We pivot to long format
@@ -279,9 +278,9 @@ invest <- invest |>
 | Number of rows    | `r invest_init_row` | `r nrow(invest)`       |
 | Number of NAs     | `r invest_init_na`  | `r sum(is.na(invest))` |
 
-We decided to keep a complete dataset and select all the countries except the one of Hungary, resulting in a lot of missing values even after cleaning (AT, CY, IE, NL have no time series available). We will eventually delete some missing countries for the analysis.
+We decided to keep a complete dataset and select all the countries, resulting in a lot of missing values even after cleaning (AT, CY, IE, NL have no time series available). We will eventually delete these countries values for the analysis.
 
-We then join this dataset to the full one.
+We then join this dataset to the previous one.
 
 ```{r}
 data2 <- left_join(data1,invest,by=join_by(DATE,Country))
@@ -290,6 +289,8 @@ data2 <- left_join(data1,invest,by=join_by(DATE,Country))
 ### Harmonised index of consumer prices (HICP)
 
 ```{r}
+#| message: false
+#| warning: false
 # We load the dataset and compute the initial number of rows and columns
 HICP <- vroom(here("data","HICP.csv"),
               delim = ",") #correct the problem of delimitation
@@ -309,7 +310,6 @@ HICP <- HICP |>
 # We select and pivot to long format
 HICP <- HICP |>
   select(!`TIME PERIOD`) |>
-  select(!HR) |>
   filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
 
 HICP <- HICP |>
@@ -331,13 +331,15 @@ data3 <- left_join(data2, HICP, by=join_by(DATE,Country))
 | Number of rows    | `r HICP_init_row` | `r nrow(HICP)`       |
 | Number of NAs     | `r HICP_init_na`  | `r sum(is.na(HICP))` |
 
-### Short term interest rates (Euribor)
+### Short term interest rates
 
 We import two short-term interest rates with maturities of three and six months, corresponding to Euribor rates. These rates are common across all euro area countries and are set by the ECB.
 
 Next, we compute the real interest rate for each country. Using the Fisher approximation, the real interest rate is obtained by subtracting a country's expected inflation rate (calculated using the consumer price index) from the nominal interest rate.
 
 ```{r}
+#| message: false
+#| warning: false
 # We load the short term interest rate of maturity 3 months, and compute the initial number of rows and columns
 ST3M_int <- vroom(here("data","Euribor_3M.csv"))
 
@@ -396,6 +398,8 @@ We import the long term interest rate for 10 years maturity.
 As well as the columns "Date", "Time Period" and the country values, there are two aggregates of code I9 (Euro area 20 (fixed composition) as of 1 January 2023) and U2 (Euro area changing composition), hence 24 columns.
 
 ```{r}
+#| message: false
+#| warning: false
 # Load and compute
 LT10Y_int <- vroom(here("data","LT_interest_rate.csv"))
 
@@ -433,3 +437,5 @@ data <- left_join(data4, LT10Y_int, by = join_by(DATE, Country))
 | Number of columns | `r LT10Y_int_init_col` | `r ncol(LT10Y_int)`       |
 | Number of rows    | `r LT10Y_int_init_row` | `r nrow(LT10Y_int)`       |
 | Number of NAs     | `r LT10Y_int_init_na`  | `r sum(is.na(LT10Y_int))` |
+
+We still observe many NAs because Estonia is included, and its data only start in 2020.
