@@ -215,47 +215,40 @@ HICP <- HICP |>
 data3 <- left_join(data, HICP, by=join_by(DATE,Country))
 ```
 
-### ST interest rate (Euribor)
+### Short term interest rates (Euribor)
 
-We import two short-term interest rates, common to all euro-area countries and set by the ECB, with maturities of three and six months.
+We import two short-term interest rates of maturities of three and six months, which are the Euribor interest rates. These two rates are common to all euro-area countries and set by the ECB.
 
 We then compute the real interest rate for each country. Using the Fisher approximation, the real rate is obtained by subtracting a country's expected inflation rate from the nominal interest rate.
 
 ```{r}
+# We load the short term interest rate of maturity 3 months, and compute the initial number of rows and columns
 ST3M_int <- vroom(here("data","Euribor_3M.csv"))
 
+ST3M_int_init_col <- ncol(ST3M_int)
+ST3M_int_init_row <- nrow(ST3M_int)
+ST3M_int_init_na <- sum(is.na(ST3M_int))
+
+# This dataset only has 3 rows
 colnames(ST3M_int) <- c("DATE","TIME PERIOD","ST3M")
 
 ST3M_int <- ST3M_int |>
-  mutate(ST3M = as.numeric(ST3M))
-
-ST3M_int <- ST3M_int |>
-  mutate(
-    DATE = as.Date(DATE, format = "%Y-%m-%d")
-  ) |>
+  select(DATE|ST3M) |>
   filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
 
-ST3M_int <- ST3M_int |>
-  select(DATE, ST3M)
+# We load the short term interest rate of maturity 6 months, and compute the initial number of rows and columns
+ST6M_int <- vroom(here("data","Euribor_3M.csv"))
 
-# 6 month 
+ST6M_int_init_col <- ncol(ST6M_int)
+ST6M_int_init_row <- nrow(ST6M_int)
+ST6M_int_init_na <- sum(is.na(ST6M_int))
 
-ST6M_int <- vroom(here("data","Euribor_6M.csv"))
-
+# This dataset only has 3 rows
 colnames(ST6M_int) <- c("DATE","TIME PERIOD","ST6M")
 
-ST6M_int <- ST6M_int |>
-  mutate(ST6M = as.numeric(ST6M))
-
-ST6M_int <- ST6M_int |>
-  mutate(
-    DATE = as.Date(DATE, format = "%Y-%m-%d")
-  ) |>
+ST3M_int <- ST3M_int |>
+  select(DATE|ST3M) |>
   filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
-
-ST6M_int <- ST6M_int |>
-  select(DATE, ST6M)
-
 
 data4 <- left_join(data3,ST3M_int,by="DATE")
 
