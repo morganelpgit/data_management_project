@@ -7,7 +7,7 @@ editor: visual
 
 ## Research question
 
-How differently does quantitative easing by the ECB affect corporate borrowing costs in the eurozone, and is this difference correlated with factors such as domestic economic development and inflation? 
+How differently does quantitative easing by the ECB affect corporate borrowing costs in the eurozone, and is this difference correlated with factors such as domestic economic development and inflation?
 
 ## Description of variables
 

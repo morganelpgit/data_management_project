@@ -9,7 +9,7 @@ format: html
 Quantitative Easing Shocks (Source: APP_breakdown_history.csv from the ECB website): 
 The monthly net amount in euro millions of ECB asset purchases
 
-Corporate borrowing rates (Source: ECB data portal):Weighted average annual interest rates of new loans for corporations in each country 
+Corporate borrowing rates (Source: ECB data portal): Weighted average annual interest rates of new loans for corporations in each country 
 
 ## Set-up & Loading data 
 
