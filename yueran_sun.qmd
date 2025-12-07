@@ -4,7 +4,7 @@ author: "Yueran SUN"
 format: html
 ---
 
-##Description of variables 
+## Description of variables 
 
 Quantitative Easing Shocks (Source: APP_breakdown_history.csv from the ECB website): 
 The monthly net amount in euro millions of ECB asset purchases
