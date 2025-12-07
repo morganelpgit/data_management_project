@@ -214,7 +214,7 @@ plot(pred) +
 ### First join
 
 ```{r}
-data <- inner_join(QE_mnet,corp_int,by=join_by(DATE)) |>
+data1 <- inner_join(QE_mnet,corp_int,by=join_by(DATE)) |>
   select(DATE,Country,Mnet,int)
 ```
 
@@ -284,7 +284,7 @@ We decided to keep a complete dataset and select all the countries except the on
 We then join this dataset to the full one.
 
 ```{r}
-data2 <- left_join(data,invest,by=join_by(DATE,Country))
+data2 <- left_join(data1,invest,by=join_by(DATE,Country))
 ```
 
 ### Harmonised index of consumer prices (HICP)
@@ -320,8 +320,16 @@ HICP <- HICP |>
   )
 
 # We join to the previous dataset
-data3 <- left_join(data, HICP, by=join_by(DATE,Country))
+data3 <- left_join(data2, HICP, by=join_by(DATE,Country))
 ```
+
+6 months maturity
+
+|                   | Before cleaning     | After cleaning         |
+|-------------------|---------------------|------------------------|
+| Number of columns | `r HICP_init_col` | `r ncol(HICP)`       |
+| Number of rows    | `r HICP_init_row` | `r nrow(HICP)`       |
+| Number of NAs     | `r HICP_init_na`  | `r sum(is.na(HICP))` |
 
 ### Short term interest rates (Euribor)
 
@@ -341,7 +349,7 @@ ST3M_int_init_na <- sum(is.na(ST3M_int))
 colnames(ST3M_int) <- c("DATE","TIME PERIOD","ST3M")
 
 ST3M_int <- ST3M_int |>
-  select(DATE|ST3M) |>
+  select(DATE,ST3M) |>
   filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
 
 # We load the short term interest rate of maturity 6 months, and compute the initial number of rows and columns
@@ -354,8 +362,8 @@ ST6M_int_init_na <- sum(is.na(ST6M_int))
 # This dataset only has 3 rows
 colnames(ST6M_int) <- c("DATE","TIME PERIOD","ST6M")
 
-ST3M_int <- ST3M_int |>
-  select(DATE|ST3M) |>
+ST6M_int <- ST6M_int |>
+  select(DATE,ST6M) |>
   filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
 
 data4 <- left_join(data3,ST3M_int,by="DATE")
@@ -382,14 +390,20 @@ There are less rows after cleaning because of all the dates removed.
 | Number of NAs     | `r ST6M_int_init_na`  | `r sum(is.na(ST6M_int))` |
 
 
+### Long term interest rate
 
-### LT interest rates
-
+We import the long term interest rate for 10 years maturity.
 As well as the columns "Date", "Time Period" and the country values, there are two aggregates of code I9 (Euro area 20 (fixed composition) as of 1 January 2023) and U2 (Euro area changing composition), hence 24 columns.
 
 ```{r}
+# Load and compute
 LT10Y_int <- vroom(here("data","LT_interest_rate.csv"))
 
+LT10Y_int_init_col <- ncol(LT10Y_int)
+LT10Y_int_init_row <- nrow(LT10Y_int)
+LT10Y_int_init_na <- sum(is.na(LT10Y_int))
+
+# We rename the columns 
 LT10Y_int <- LT10Y_int |>
   rename_with(~ ifelse(
     str_detect(., "IRS\\.M\\.[A-Z0-9]{2}\\."),
@@ -397,22 +411,25 @@ LT10Y_int <- LT10Y_int |>
     .
   ))
 
-LT10Y_int <- LT10Y_int |>
-  mutate(DATE = as.Date(DATE, format = "%Y-%m-%d"))
-
-LT10Y_int <- LT10Y_int |>
-  filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30")) 
-
+# We select and pivot to long format
 LT10Y_int <- LT10Y_int |>
   select(DATE, AT, BE, CY, DE, EE, ES, FI, FR, GR, HR, IE, IT, LT, LU, LV, MT, NL, PT, SI, SK, U2
-  ) # we don't select I9
+  ) |> # we don't select I9 
+  filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30")) 
 
 LT10Y_int <- LT10Y_int |>
   pivot_longer(
     cols = -DATE,
     names_to = "Country",
-    values_to = "LT10Y_int"
+    values_to = "LT10Y"
   )
 
-data5 <- left_join(data4, LT10Y_int, by = join_by(DATE, Country))
+# We join to the final dataset
+data <- left_join(data4, LT10Y_int, by = join_by(DATE, Country))
 ```
+
+|                   | Before cleaning     | After cleaning         |
+|-------------------|---------------------|------------------------|
+| Number of columns | `r LT10Y_int_init_col` | `r ncol(LT10Y_int)`       |
+| Number of rows    | `r LT10Y_int_init_row` | `r nrow(LT10Y_int)`       |
+| Number of NAs     | `r LT10Y_int_init_na`  | `r sum(is.na(LT10Y_int))` |
