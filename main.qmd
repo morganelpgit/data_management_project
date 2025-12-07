@@ -5,6 +5,10 @@ format: html
 editor: visual
 ---
 
+## Link to the github project 
+
+<https://github.com/morganelpgit/data_management_project.git>
+
 ## Research question
 
 How differently does quantitative easing by the ECB affect corporate borrowing costs in the eurozone, and is this difference correlated with factors such as domestic economic development and inflation?
@@ -30,19 +34,19 @@ To limit our research only to countries directly regulated by the European Centr
 
 For all other datasets of the ECB Data Portal, we browsed the series name through the the search engine, select the option "All MU countries (20)" in the "Geographical areas", "select all", and download as csv files that contains all countries times series.
 
-- Cost of borrowing for corporations , Euro area, Monthly (https://data.ecb.europa.eu/search-results?searchTerm=Cost%20of%20borrowing%20for%20corporations)
+- Cost of borrowing for corporations , Euro area, Monthly <https://data.ecb.europa.eu/search-results?searchTerm=Cost%20of%20borrowing%20for%20corporations>
 
--   Direct investment, net, transactions, Monthly (https://data.ecb.europa.eu/search-results?searchTerm=Direct%20investment%2C%20net%2C%20transactions%2C%20Monthly)
+-   Direct investment, net, transactions, Monthly <https://data.ecb.europa.eu/search-results?searchTerm=Direct%20investment%2C%20net%2C%20transactions%2C%20Monthly>
 
--   HICP - Overall index, Euro area, Monthly (https://data.ecb.europa.eu/search-results?searchTerm=HICP%20-%20Overall%20index%2C%20Euro%20area%2C%20Monthly)
+-   HICP - Overall index, Euro area, Monthly <https://data.ecb.europa.eu/search-results?searchTerm=HICP%20-%20Overall%20index%2C%20Euro%20area%2C%20Monthly>
 
--   Euribor 3-month - Historical close, average of observations through period, Euro area, Monthly (https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR3MD\_.HSTA)
+-   Euribor 3-month - Historical close, average of observations through period, Euro area, Monthly <https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR3MD\_.HSTA>
 
 -   Euribor 6-month - Historical close, average of observations through period, Euro area, Monthly (https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR6MD\_.HSTA)
 
--   Long-term interest rate for convergence purposes – 10-year maturity – denominated in euro – Euro area 20 (fixed composition) (https://data.ecb.europa.eu/search-results?searchTerm=Long-term%20interest%20rate%20for%20convergence%20purposes%20%E2%80%93%2010-year%20maturity%20%E2%80%93%20denominated%20in%20euro)
+-   Long-term interest rate for convergence purposes – 10-year maturity – denominated in euro – Euro area 20 (fixed composition) <https://data.ecb.europa.eu/search-results?searchTerm=Long-term%20interest%20rate%20for%20convergence%20purposes%20%E2%80%93%2010-year%20maturity%20%E2%80%93%20denominated%20in%20euro>
 
-The ECB Data Portal (https://data.ecb.europa.eu/) is the European Central Bank's online delivery service for statistical data and related metadata and publications.
+The ECB Data Portal <https://data.ecb.europa.eu/> is the European Central Bank's online delivery service for statistical data and related metadata and publications.
 
 ## Description of the sources
 
