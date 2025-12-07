@@ -7,7 +7,19 @@ editor: visual
 
 ## Research question
 
-How differently does quantitative easing by the ECB affect corporate borrowing costs in the eurozone, and is this difference correlated with factors such as domestic economic development and inflation? 
+Since its first introduction under the Obama administration as a response to the subprime mortgage crisis of 2008-2009, quantitative easing has always been labeled as an "unconventional" policy, its actual effectiveness and associated risks debated till this day. Despite its risks, the challenges faced by the eurozone pushed the European Central Bank to adopt its own version of this monetary policy: The Asset Purchase Programme (APP). Unlike the US Federal Reserve, the ECB launched its program in 2015, years after the acute phase of the sovereign debt crisis, primarily to combat deflationary risks and, critically, to counteract the severe financial fragmentation that had developed between core and peripheral member states (an important example would be Greece and Germany)
+
+There is ample research surrounding quantitative easing, much of which focuses on Europe, examining the impact on sovereign bond yields, stock market behavior, and the overall macroeconomic aggregates like inflation and GDP growth. However, we observe fairly little research on the private sector that extends beyond the financial market -- specifically, there isn't a great amount of research on the direct effect of quantitative easing on corporations' day-to-day operations. This is an important question because one of the fundamental functions of any monetary policy is, after all, to regulate economic development to ensure a healthy, efficient economy, and the operations of private enterprises are the driving force of the economy. Therefore, we would like to investigate the effect of quantitative easing on one key aspect of the private sector: the funding of corporations. In addition, from the existing literature, we were able to discover interesting studies focusing on country-level effects of the APP. Such research allowed us to realize that, even though the economic chasm between certain countries of Europe -- highlighted by the Greek debt crisis of 2010 -- was what pushed the ECB to adopt quantitative easing, that same chasm would also produce unexpected effects of quantitative easing.
+
+Therefore, we propose the following research question:
+
+**How does quantitative easing by the ECB affect corporate borrowing costs in the eurozone (the European Monetary Union), and how different is this impact across different members of the EMU?**
+
+**We will also attempt to observe whether this difference correlated with factors such as domestic economic development and inflation.**
+
+This is a two-part inquiry that investigates both the transmission of unconventional monetary policy and the asymmetry of this transmission. The goal is to move beyond the study of the eurozone as a monolith, to examine its fragmentation, and how that fragmentation complicates decisions made by a central, unifying authority like the ECB.
+
+To limit our research only to countries directly regulated by the European Central Bank, we have selected data only from the EMU. Sourcing data from publicly accessible websites such as the OECD and the ECB Data Portal, we will first run a regression analysis of corporate borrowing costs in the EMU against monthly asset purchases by the ECB (incorporating lags and proxies/instruments to represent generale economic policy tightness/looseness) to establish a benchmark coefficient for the EMU. Then, we will estimate country-specific coefficients and conduct cluster analysis (e.g. using KNN analysis) to determine which countries display the most similar coefficients, and highlight the economic features that define countries in the same cluster.
 
 ## Description of variables
 
