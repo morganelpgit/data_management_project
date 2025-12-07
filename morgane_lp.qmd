@@ -22,15 +22,13 @@ library(stringr)
 
 ## Import
 
+##Description of variables
 
-##Description of variables 
+Quantitative Easing Shocks (Source: APP_breakdown_history.csv from the ECB website): The monthly net amount in euro millions of ECB asset purchases
 
-Quantitative Easing Shocks (Source: APP_breakdown_history.csv from the ECB website): 
-The monthly net amount in euro millions of ECB asset purchases
+Corporate borrowing rates (Source: ECB data portal):Weighted average annual interest rates of new loans for corporations in each country
 
-Corporate borrowing rates (Source: ECB data portal):Weighted average annual interest rates of new loans for corporations in each country 
-
-## Set-up & Loading data 
+## Set-up & Loading data
 
 ```{r}
 
@@ -108,9 +106,10 @@ QE_mnet <- QE_mnet|>
 
 ```
 
-Loading Data: Corporate borrowing rates per country (downloaded from the ECB data portal) 
+Loading Data: Corporate borrowing rates per country (downloaded from the ECB data portal)
 
 Data cleaning: Renaming variables & Pivoting
+
 ```{r}
 
 corp_int <- read_csv(here("data","corp_int.csv"))
@@ -147,7 +146,7 @@ corp_int <- corp_int|>
 
 ```
 
-Merging corporate interest rates & QE datasets 
+Merging corporate interest rates & QE datasets
 
 ```{r}
 
@@ -212,9 +211,6 @@ plot(pred) +
 
 ```
 
-
-
-
 ### First join
 
 ```{r}
@@ -230,7 +226,7 @@ We start by loading the dataset from our data folder, and computing the original
 
 Two columns are for the date : `DATE` as a date,`TIME PERIOD` as a character. The others are the values for the twenty countries of the Euro Union. Each of these column corresponds to a full ECB series name, for example: `Financial account, Direct Investment, Net (BPS.M.N.IE.W1.S1.S1.T.N.FA.D.F5._Z.EUR._T._X.N.ALL)`. We rename each column by extracting the two letter country code from the series name, using the function ifelse.
 
-Next, we select all columns except `TIME PERIOD` (we will use `DATE` for joining) and Hungary's values, as this country's target variable is not available. We also filter the observations from October 2014 to November 2025. 
+Next, we select all columns except `TIME PERIOD` (we will use `DATE` for joining) and Hungary's values, as this country's target variable is not available. We also filter the observations from October 2014 to November 2025.
 
 Finally, we transform the dataset from wide format (months as rows, countries as columns) to long format (months and countries as rows), and left join to the full `data` dataset.
 
@@ -277,12 +273,11 @@ invest <- invest |>
   )
 ```
 
-|                   | Before cleaning       | After cleaning      |
-|-------------------|-----------------------|---------------------|
-| Number of columns | `r invest_init_col`   | `r ncol(invest)`        |
-| Number of rows    | `r invest_init_row` | `r nrow(invest)`        |
+|                   | Before cleaning     | After cleaning         |
+|-------------------|---------------------|------------------------|
+| Number of columns | `r invest_init_col` | `r ncol(invest)`       |
+| Number of rows    | `r invest_init_row` | `r nrow(invest)`       |
 | Number of NAs     | `r invest_init_na`  | `r sum(is.na(invest))` |
-
 
 We decided to keep a complete dataset and select all the countries except the one of Hungary, resulting in a lot of missing values even after cleaning (AT, CY, IE, NL have no time series available). We will eventually delete some missing countries for the analysis.
 
@@ -330,9 +325,9 @@ data3 <- left_join(data, HICP, by=join_by(DATE,Country))
 
 ### Short term interest rates (Euribor)
 
-We import two short-term interest rates of maturities of three and six months, which are the Euribor interest rates. These two rates are common to all euro-area countries and set by the ECB.
+We import two short-term interest rates with maturities of three and six months, corresponding to Euribor rates. These rates are common across all euro area countries and are set by the ECB.
 
-We then compute the real interest rate for each country. Using the Fisher approximation, the real rate is obtained by subtracting a country's expected inflation rate from the nominal interest rate.
+Next, we compute the real interest rate for each country. Using the Fisher approximation, the real interest rate is obtained by subtracting a country's expected inflation rate (calculated using the consumer price index) from the nominal interest rate.
 
 ```{r}
 # We load the short term interest rate of maturity 3 months, and compute the initial number of rows and columns
@@ -367,6 +362,25 @@ data4 <- left_join(data3,ST3M_int,by="DATE")
 
 data4 <- left_join(data4,ST6M_int,by="DATE")
 ```
+
+3 months maturity
+
+|                   | Before cleaning     | After cleaning         |
+|-------------------|---------------------|------------------------|
+| Number of columns | `r ST3M_int_init_col` | `r ncol(ST3M_int)`       |
+| Number of rows    | `r ST3M_int_init_row` | `r nrow(ST3M_int)`       |
+| Number of NAs     | `r ST3M_int_init_na`  | `r sum(is.na(ST3M_int))` |
+
+There are less rows after cleaning because of all the dates removed. 
+
+6 months maturity
+
+|                   | Before cleaning     | After cleaning         |
+|-------------------|---------------------|------------------------|
+| Number of columns | `r ST6M_int_init_col` | `r ncol(ST6M_int)`       |
+| Number of rows    | `r ST6M_int_init_row` | `r nrow(ST6M_int)`       |
+| Number of NAs     | `r ST6M_int_init_na`  | `r sum(is.na(ST6M_int))` |
+
 
 
 ### LT interest rates
