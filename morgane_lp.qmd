@@ -117,7 +117,9 @@ We start by loading the dataset from our data folder, and computing the original
 
 Two columns are for the date : `DATE` as a date,`TIME PERIOD` as a character. The others are the values for the twenty countries of the Euro Union. Each of these column corresponds to a full ECB series name, for example: `Financial account, Direct Investment, Net (BPS.M.N.IE.W1.S1.S1.T.N.FA.D.F5._Z.EUR._T._X.N.ALL)`. We rename each column by extracting the two letter country code from the series name, using the function ifelse.
 
-Next, we select all columns except `TIME PERIOD` (we will use `DATE` for joining), remove Hungary's data that appear in the file, transform the dataset from wide format (months as rows, countries as columns) to long format (months and countries as rows), and left join to the full `data` dataset.
+Next, we select all columns except `TIME PERIOD` (we will use `DATE` for joining) and Hungary's values, as this country's target variable is not available. We also filter the observations from October 2014 to November 2025. 
+
+Finally, we transform the dataset from wide format (months as rows, countries as columns) to long format (months and countries as rows), and left join to the full `data` dataset.
 
 ### Net investments
 
@@ -147,10 +149,13 @@ invest <- invest |>
     .
   ))
 
-# We select and pivot to long format
+# We select the variables and filter the date
 invest <- invest |>
-  select(!`TIME PERIOD`)
+  select(!`TIME PERIOD`) |>
+  select(!HR) |> 
+  filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
 
+# We pivot to long format
 invest <- invest |>
     pivot_longer(
     cols = -DATE,
@@ -163,10 +168,10 @@ invest <- invest |>
 |-------------------|-----------------------|---------------------|
 | Number of columns | `r invest_init_col`   | `r ncol(invest)`        |
 | Number of rows    | `r invest_init_row` | `r nrow(invest)`        |
-| Number of NAs     | `r invest_init_na`  | `r sum(!is.na(invest))` |
+| Number of NAs     | `r invest_init_na`  | `r sum(is.na(invest))` |
 
 
-We decided to keep a complete dataset and select all the countries except the one of Hungary, resulting in a lot of missing values even after cleaning (AT, CY, IE, NL have no time series). We will eventually delete some missing countries for the analysis.
+We decided to keep a complete dataset and select all the countries except the one of Hungary, resulting in a lot of missing values even after cleaning (AT, CY, IE, NL have no time series available). We will eventually delete some missing countries for the analysis.
 
 We then join this dataset to the full one.
 
@@ -195,7 +200,9 @@ HICP <- HICP |>
 
 # We select and pivot to long format
 HICP <- HICP |>
-  select(!`TIME PERIOD`)
+  select(!`TIME PERIOD`) |>
+  select(!HR) |>
+  filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
 
 HICP <- HICP |>
   pivot_longer(
@@ -204,7 +211,8 @@ HICP <- HICP |>
     values_to = "HICP"
   )
 
-data3 <- left_join(data, HICP, by = c("DATE", "Country"))
+# We join to the previous dataset
+data3 <- left_join(data, HICP, by=join_by(DATE,Country))
 ```
 
 ### ST interest rate (Euribor)
