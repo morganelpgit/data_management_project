@@ -22,11 +22,32 @@ library(stringr)
 
 ## Import
 
-##Description of variables
+## Description of the sources 
 
-Quantitative Easing Shocks (Source: APP_breakdown_history.csv from the ECB website): The monthly net amount in euro millions of ECB asset purchases
 
-Corporate borrowing rates (Source: ECB data portal):Weighted average annual interest rates of new loans for corporations in each country
+
+## Description of the variables
+
+### Target variable : Corporate borrowing rates 
+
+- Corporate borrowing rates (Source: ECB data portal): Weighted average annual interest rates of new loans for corporations in each country
+
+### Quantitative Easing variables : the Asset Purchase Programme (2014)
+
+- Quantitative Easing (QE) Shocks (Source: APP_breakdown_history.csv from the ECB website): The monthly net amount in euro millions of ECB asset purchases
+
+### Other variables 
+
+- Direct investment, net, transactions, Euro Area 20, Monthly (Source: ECB Data Portal):
+Net inflows and outflows of direct investment for each country. This variable helps to assess whether quantitative easing have caused capital flight between core and peripheral Euro area countries.
+
+- Harmonised Index of Consumer Prices (HICP) (Source: ECB data portal). We will use this variable to compute the real inflation rate for each country.
+
+- Short term rates : Euribor 3-month & 6-month - Historical close, average of observations through period, Euro area, Monthly  (Source: ECB data portal). 
+These nominal rates are set by the monetary policy of the ECB, and are common across all Euro area. We will then compute the real interest rate for each country. Using the Fisher approximation, the real interest rate is obtained by subtracting a country's inflation rate from the nominal interest rate.
+
+-  Long-term interest rate – 10-year maturity – denominated in euro – Euro area 20 (Source: ECB data portal). This variable represents the yield on government bonds, and helps us to assess whether QE has had different effects on core and peripheral Euro area countries.
+
 
 ## Set-up & Loading data
 
@@ -333,9 +354,7 @@ data3 <- left_join(data2, HICP, by=join_by(DATE,Country))
 
 ### Short term interest rates
 
-We import two short-term interest rates with maturities of three and six months, corresponding to Euribor rates. These rates are common across all euro area countries and are set by the ECB.
-
-Next, we compute the real interest rate for each country. Using the Fisher approximation, the real interest rate is obtained by subtracting a country's expected inflation rate (calculated using the consumer price index) from the nominal interest rate.
+These two nominal rates (maturity 3 and 6 month) are common across all euro area countries and are set by the ECB. We will then compute the real interest rate for each country. 
 
 ```{r}
 #| message: false
