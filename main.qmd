@@ -9,7 +9,7 @@ editor: visual
 
 How differently does quantitative easing by the ECB affect corporate borrowing costs in the eurozone, and is this difference correlated with factors such as domestic economic development and inflation?
 
-Since its first introduction under the Obama administration as a response to the subprime mortgage crisis of 2008-2009, quantitative easing has always been labeled as an "unconventional" policy, its actual effectiveness and associated risks debated till this day. Despite its risks, the challenges faced by the eurozone pushed the European Central Bank to adopt its own version of this monetary policy: The Asset Purchase Programme (APP). Unlike the US Federal Reserve, the ECB launched its program in 2015, years after the acute phase of the sovereign debt crisis, primarily to combat deflationary risks and, critically, to counteract the severe financial fragmentation that had developed between core and peripheral member states (an important example would be Greece and Germany)
+Since its first introduction under the Obama administration as a response to the subprime mortgage crisis of 2008-2009, quantitative easing has always been labeled as an "unconventional" policy, its actual effectiveness and associated risks debated till this day. Despite its risks, the challenges faced by the eurozone pushed the European Central Bank to adopt its own version of this monetary policy: The Asset Purchase Programme (APP). Unlike the US Federal Reserve, the ECB launched its program in 2015, years after the acute phase of the sovereign debt crisis, primarily to combat deflationary risks and, critically, to counteract the severe financial fragmentation that had developed between core and peripheral member states (an important example would be Greece and Germany).
 
 There is ample research surrounding quantitative easing, much of which focuses on Europe, examining the impact on sovereign bond yields, stock market behavior, and the overall macroeconomic aggregates like inflation and GDP growth. However, we observe fairly little research on the private sector that extends beyond the financial market -- specifically, there isn't a great amount of research on the direct effect of quantitative easing on corporations' day-to-day operations. This is an important question because one of the fundamental functions of any monetary policy is, after all, to regulate economic development to ensure a healthy, efficient economy, and the operations of private enterprises are the driving force of the economy. Therefore, we would like to investigate the effect of quantitative easing on one key aspect of the private sector: the funding of corporations. In addition, from the existing literature, we were able to discover interesting studies focusing on country-level effects of the APP. Such research allowed us to realize that, even though the economic chasm between certain countries of Europe -- highlighted by the Greek debt crisis of 2010 -- was what pushed the ECB to adopt quantitative easing, that same chasm would also produce unexpected effects of quantitative easing.
 
@@ -23,11 +23,25 @@ This is a two-part inquiry that investigates both the transmission of unconventi
 
 To limit our research only to countries directly regulated by the European Central Bank, we have selected data only from the EMU. Sourcing data from publicly accessible websites such as the OECD and the ECB Data Portal, we will first run a regression analysis of corporate borrowing costs in the EMU against monthly asset purchases by the ECB (incorporating lags and proxies/instruments to represent generale economic policy tightness/looseness) to establish a benchmark coefficient for the EMU. Then, we will estimate country-specific coefficients and conduct cluster analysis (e.g. using KNN analysis) to determine which countries display the most similar coefficients, and highlight the economic features that define countries in the same cluster.
 
-## Description of variables
+## Link to the sources
 
-Quantitative Easing Shocks (Source: APP_breakdown_history.csv from the ECB website): The monthly net amount in euro millions of ECB asset purchases
+-   Quantitative Easing data : The monthly net amount in euro millions of ECB asset purchases. We are using the csv file "APP_breakdown_history" (click on the link "History of cumulative purchase breakdowns under the APP") downloaded from the webpage dedicated to the Asset Purchase Programme :  <https://www.ecb.europa.eu/mopo/implement/app/html/index.en.html)>. 
 
-Corporate borrowing rates (Source: ECB data portal):Weighted average annual interest rates of new loans for corporations in each country
+For all other datasets of the ECB Data Portal, we browsed the series name through the the search engine, select the option "All MU countries (20)" in the "Geographical areas", "select all", and download as csv files that contains all countries times series.
+
+- Corporate borrowing rates (Source: ECB data portal) : Weighted average annual interest rates of new loans for corporations in each country
+
+-   Direct investment, net, transactions, Monthly (https://data.ecb.europa.eu/search-results?searchTerm=Direct%20investment%2C%20net%2C%20transactions%2C%20Monthly)
+
+-   HICP - Overall index, Euro area, Monthly (https://data.ecb.europa.eu/search-results?searchTerm=HICP%20-%20Overall%20index%2C%20Euro%20area%2C%20Monthly)
+
+-   Euribor 3-month - Historical close, average of observations through period, Euro area, Monthly (https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR3MD\_.HSTA)
+
+-   Euribor 6-month - Historical close, average of observations through period, Euro area, Monthly (https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR6MD\_.HSTA)
+
+-   Long-term interest rate for convergence purposes – 10-year maturity – denominated in euro – Euro area 20 (fixed composition) (https://data.ecb.europa.eu/search-results?searchTerm=Long-term%20interest%20rate%20for%20convergence%20purposes%20%E2%80%93%2010-year%20maturity%20%E2%80%93%20denominated%20in%20euro)
+
+The ECB Data Portal (https://data.ecb.europa.eu/) is the European Central Bank's online delivery service for statistical data and related metadata and publications.
 
 ## Set-up
 
@@ -43,7 +57,7 @@ library(here)
 
 ## Data Loading & Data Cleaning
 
-Load Data: Historical data of asset puchases by the ECB (Downloaded from the webpage <https://www.ecb.europa.eu/mopo/implement/app/html/index.en.html)> & Data cleaning
+Load Data: Historical data of asset puchases by the ECB & Data cleaning
 
 Data cleaning: Remove useless data & Adding dates & Converting variables to proper formats
 
