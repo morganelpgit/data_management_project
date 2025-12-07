@@ -115,17 +115,19 @@ Each data file downloaded from the ECB Data Portal is loaded and cleaned as foll
 
 We start by loading the dataset from our data folder, and computing the original number of rows and columns. We use the function spec() with the col_types() argument to preserve the date format for `DATE`, and the numeric type for variables that are incorrectly recognized as logical.
 
-Each column corresponds to a full ECB series name, for example: `Financial account, Direct Investment, Net (BPS.M.N.IE.W1.S1.S1.T.N.FA.D.F5._Z.EUR._T._X.N.ALL)`. We rename each column by extracting the two letter country code from the series name, using ifelse.
+Two columns are for the date : `DATE` as a date,`TIME PERIOD` as a character. The others are the values for the twenty countries of the Euro Union. Each of these column corresponds to a full ECB series name, for example: `Financial account, Direct Investment, Net (BPS.M.N.IE.W1.S1.S1.T.N.FA.D.F5._Z.EUR._T._X.N.ALL)`. We rename each column by extracting the two letter country code from the series name, using the function ifelse.
 
-Next, we select all columns except `TIME PERIOD` (we will use `DATE` for joining), remove Hungary's data that appear in the file, transform the dataset from wide format (months as rows, countries as columns) to long format (months and countries as rows), and left joined to the full `data` dataset.
+Next, we select all columns except `TIME PERIOD` (we will use `DATE` for joining) and Hungary's values, as this country's target variable is not available. We also filter the observations from October 2014 to November 2025. 
+
+Finally, we transform the dataset from wide format (months as rows, countries as columns) to long format (months and countries as rows), and left join to the full `data` dataset.
 
 ### Net investments
 
 ```{r}
 #| message: false
 #| warning: false
-# We load the dataset and compute the initial number of rows and columns
 
+# We load the dataset and compute the initial number of rows and columns
 invest <- vroom(here("data","Net_direct_investments.csv"), 
                 col_types = cols(
   DATE = col_date(format = ""),
@@ -147,17 +149,18 @@ invest <- invest |>
     .
   ))
 
-#invest <- invest|>
-#  mutate(DATE2 = as.Date(DATE, format = "%Y/%m/%d"))
-
+# We select the variables and filter the date
 invest <- invest |>
-  select(!`TIME PERIOD`)
+  select(!`TIME PERIOD`) |>
+  select(!HR) |> 
+  filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
 
+# We pivot to long format
 invest <- invest |>
     pivot_longer(
     cols = -DATE,
     names_to = "Country",
-    values_to = "int"
+    values_to = "Invest"
   )
 ```
 
@@ -165,9 +168,10 @@ invest <- invest |>
 |-------------------|-----------------------|---------------------|
 | Number of columns | `r invest_init_col`   | `r ncol(invest)`        |
 | Number of rows    | `r invest_init_row` | `r nrow(invest)`        |
-| Number of NAs     | `r invest_init_na`  | `r sum(!is.na(invest))` |
+| Number of NAs     | `r invest_init_na`  | `r sum(is.na(invest))` |
 
-We decided to keep a complete dataset and select all the countries except the one of Hungary, resulting in a lot of missing values even after cleaning (AT, CY, IE, NL have no time series). We will eventually delete some missing countries for the analysis.
+
+We decided to keep a complete dataset and select all the countries except the one of Hungary, resulting in a lot of missing values even after cleaning (AT, CY, IE, NL have no time series available). We will eventually delete some missing countries for the analysis.
 
 We then join this dataset to the full one.
 
@@ -175,25 +179,30 @@ We then join this dataset to the full one.
 data2 <- left_join(data,invest,by=join_by(DATE,Country))
 ```
 
-### HICP
+### Harmonised index of consumer prices (HICP)
 
 ```{r}
+# We load the dataset and compute the initial number of rows and columns
 HICP <- vroom(here("data","HICP.csv"),
-              delim = ",") #problem of delimitation
+              delim = ",") #correct the problem of delimitation
 
+HICP_init_col <- ncol(HICP)
+HICP_init_row <- nrow(HICP)
+HICP_init_na <- sum(is.na(HICP))
+
+# We rename the columns 
 HICP <- HICP |>
   rename_with(~ ifelse(
-    str_detect(., "ICP\\.M\\.[A-Z]{2}\\."),   # detect all columns with ICP.M.XX.
-    str_extract(., "(?<=ICP\\.M\\.)[A-Z]{2}(?=\\.)"),  # extract XX
+    str_detect(., "ICP\\.M\\.[A-Z]{2}\\."),  
+    str_extract(., "(?<=ICP\\.M\\.)[A-Z]{2}(?=\\.)"),
     .
   ))
 
+# We select and pivot to long format
 HICP <- HICP |>
-  mutate(DATE = as.Date(DATE, format = "%Y/%m/%d"))
-
-HICP <- HICP |>
-  filter(DATE > as.Date("2014-10-01")) |>
-  select(DATE, AT, BE, CY, DE, EE, FI, FR, GR, HR, IE, IT, LV, LT, LU, MT, NL, PT, SK, SI, ES)
+  select(!`TIME PERIOD`) |>
+  select(!HR) |>
+  filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
 
 HICP <- HICP |>
   pivot_longer(
@@ -202,7 +211,8 @@ HICP <- HICP |>
     values_to = "HICP"
   )
 
-data3 <- left_join(data, HICP, by = c("DATE", "Country"))
+# We join to the previous dataset
+data3 <- left_join(data, HICP, by=join_by(DATE,Country))
 ```
 
 ### ST interest rate (Euribor)
