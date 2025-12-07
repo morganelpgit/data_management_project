@@ -46,7 +46,7 @@ The ECB Data Portal (https://data.ecb.europa.eu/) is the European Central Bank's
 
 ## Description of the sources
 
-### Quantitative Easing variable : the Asset Purchase Programme (2014)
+### Quantitative Easing variables : the Asset Purchase Programme (2014)
 
 -   Quantitative Easing (QE) Shocks (Source: APP_breakdown_history.csv from the ECB website): The monthly net amount in euro millions of ECB asset purchases. This dataset provides the breakdown of cumulative net purchases under the Asset Purchase Programme (APP) - the ECB's quantitative easing programme - covering the period 2014–2025. We focus on the first four columns of the dataset, which report monthly net purchases at book value for each of the four components of the APP, which are the corporate sector purchase programme (CSPP), the public sector purchase programme (PSPP), the asset-backed securities purchase programme (ABSPP) and the third covered bond purchase programme (CBPP3).
 
@@ -196,12 +196,13 @@ corp_int <- corp_int |>
 #The previous function does not the code "U2" (which represents the EU) because it does not contain only letters from the alphabet, therefore, we manually add it. 
 names(corp_int)[23] <- paste("U2")
 
-#We change the date format and remove the useless "TIME PERIOD" column 
+#We change the date format, remove the useless "TIME PERIOD" column and filter the useful period
 corp_int <- corp_int|>
   mutate(DATE = as.Date(DATE, format = "%Y/%m/%d"))
 
-corp_int <- corp_int|>select(!`TIME PERIOD`)
-
+corp_int <- corp_int|>
+  select(!`TIME PERIOD`) |>
+  filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
 
 #We pivot from long to wide, so that now we have observations in country-months
 corp_int <- corp_int|>
@@ -210,7 +211,6 @@ corp_int <- corp_int|>
     names_to = "Country",
     values_to = "int"
   )
-
 ```
 
 |                   | Before cleaning   | After cleaning       |
@@ -219,15 +219,14 @@ corp_int <- corp_int|>
 | Number of rows    | `r corp_init_row` | `r nrow(corp_int)`       |
 | Number of NAs     | `r corp_init_na`  | `r sum(is.na(corp_int))` |
 
+The remaining NAs originate from missing data for Hungary (HR) and three missing observations for Lithuania (LT). We will eventually remove this country’s values from the analysis.
 
 ### First merge
 
 Merging corporate interest rates & QE datasets
 
 ```{r}
-qe_int <- QE_mnet|>
-  left_join(
-    corp_int
+qe_int <- left_join(QE_mnet,corp_int, by = join_by(DATE)
   )
 data1 <- qe_int
 ```
