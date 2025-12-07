@@ -42,7 +42,7 @@ For all other datasets of the ECB Data Portal, we browsed the series name throug
 
 -   Euribor 3-month - Historical close, average of observations through period, Euro area, Monthly <https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR3MD\_.HSTA>
 
--   Euribor 6-month - Historical close, average of observations through period, Euro area, Monthly (https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR6MD\_.HSTA)
+-   Euribor 6-month - Historical close, average of observations through period, Euro area, Monthly <https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR6MD\_.HSTA>
 
 -   Long-term interest rate for convergence purposes – 10-year maturity – denominated in euro – Euro area 20 (fixed composition) <https://data.ecb.europa.eu/search-results?searchTerm=Long-term%20interest%20rate%20for%20convergence%20purposes%20%E2%80%93%2010-year%20maturity%20%E2%80%93%20denominated%20in%20euro>
 
