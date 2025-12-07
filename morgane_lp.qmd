@@ -32,6 +32,7 @@ library(stringr)
 
 - Corporate borrowing rates (Source: ECB data portal): Weighted average annual interest rates of new loans for corporations in each country
 
+
 ### Quantitative Easing variable : the Asset Purchase Programme (2014)
 
 - Quantitative Easing (QE) Shocks (Source: APP_breakdown_history.csv from the ECB website): The monthly net amount in euro millions of ECB asset purchases
