@@ -595,3 +595,88 @@ desc_stats
 ```
 less interest rate for core countries 
 
+### Best lag with criterion
+
+Faire tests du meilleur lag
+
+### per country estimation with controls
+
+```{r}
+data <- data |>
+  group_by(Country) |>
+  arrange(DATE) |>
+  mutate(Mnet_lag1 = lag(Mnet, 1)) |>
+  ungroup()
+```
+
+
+First, one regression per country without fixed effect (fixed effect doesn't work). 
+
+```{r}
+#  fixest is a user-friendly estimation of econometric models with multiple fixed-effects. 
+library(broom)
+library(fixest)
+
+country_regs <- data |>
+  filter(Country != "U2") |>
+  group_by(Country) |>
+  do({
+    model <- lm(int ~ Mnet_lag1, data = .)
+    tidy(model) |>
+      mutate(r2 = glance(model)$r.squared)
+  })
+
+# Or with control variables 
+country_regs <- data |>
+  filter(Country != "U2") |>
+  group_by(Country) |>
+  do({
+    model <- lm(int ~ Mnet_lag1 + HICP + ST3M + LT10Y, data = .)
+    tidy(model) |>
+      mutate(r2 = glance(model)$r.squared)
+  })
+
+
+qe_country <- country_regs |>
+  filter(term == "Mnet_lag1") |>
+  select(Country, estimate, std.error, p.value, r2)
+
+qe_country <- qe_country |>
+  mutate(Group = case_when(
+    Country %in% CORE ~ "Core",
+    Country %in% PERIPHERY ~ "Periphery",
+    Country %in% OTHER ~ "Other"
+  ))
+
+# Data frame of estimates, their pvalue, r2 per country
+qe_country <- qe_country |>
+  mutate(
+    signif = case_when(
+      p.value < 0.01 ~ "***",
+      p.value < 0.05 ~ "**",
+      p.value < 0.10 ~ "*",
+      TRUE ~ ""
+    )
+  )
+
+qe_country
+```
+
+```{r}
+core_tab <- qe_country |>
+  filter(Group == "Core")
+
+peri_tab <- qe_country |>
+  filter(Group == "Periphery")
+
+core_tab
+peri_tab
+mean(core_tab$estimate)
+mean(peri_tab$estimate)
+
+```
+
+We expect : lower coef, less significant for core 
+Because more fixed term contracts : interest rate vary less. 
+
+### estimation with ln, with fixed effect (to dos)
