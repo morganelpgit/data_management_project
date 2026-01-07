@@ -476,3 +476,17 @@ data <- left_join(data4, LT10Y_int, by = join_by(DATE, Country))
 | Number of NAs     | `r LT10Y_int_init_na`  | `r sum(is.na(LT10Y_int))` |
 
 We still observe many NAs because Estonia is included, and its data only start in 2020.
+## Final phase to discuss 
+
+### Cleaning
+
+```{r}
+rm(data1,data2,data3,data4)
+
+#ajouter CSPP from 2014
+data <- data |>
+  left_join(qe_nona$CSPP, by = "DATE") #MANQUE OCTOBRE DANS QE NONA
+
+data <- data |>
+  select(-c(`Invest`, Mnet_lag1, Mnet_lag3, Mnet_lag6))
+```
