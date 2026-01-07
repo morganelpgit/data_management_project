@@ -557,3 +557,41 @@ corp_int |>
   theme_minimal()
 ```
 
+### Clustering with litterature 
+
+Large literature identifies core and peripheral countries in the EMU (to develop). Based on BERG WP (2024) we identify : 
+CORE = BE, FR, DE, LU, NL
+PERIPHERY = GR, IE, IT, PT, ES
+
+```{r}
+CORE <- c("BE", "FR", "DE", "LU", "NL")
+PERIPHERY <- c("GR", "IE", "IT", "PT", "ES")
+OTHER <- c("AT","CY", "EE", "FI", "HR", "LT", "LV", "MT", "SI", "SK")
+
+data <- data |>
+  mutate(Group = case_when(
+    Country %in% CORE ~ "Core",
+    Country %in% PERIPHERY ~ "Periphery",
+    Country %in% OTHER ~ "Other"
+  ))
+```
+
+```{r}
+library(dplyr)
+
+desc_stats <- data |>
+  filter(DATE >= as.Date("2014-10-01")) |>
+  group_by(Group) |>
+  summarise(
+    n_obs   = n(),
+    mean    = mean(int, na.rm = TRUE),
+    median  = median(int, na.rm = TRUE),
+    sd      = sd(int, na.rm = TRUE),
+    min     = min(int, na.rm = TRUE),
+    max     = max(int, na.rm = TRUE)
+  )
+
+desc_stats
+```
+less interest rate for core countries 
+
