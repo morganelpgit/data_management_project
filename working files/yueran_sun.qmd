@@ -194,3 +194,36 @@ plot(pred) +
 ```
 
 
+## Regression
+
+```{r}
+
+library(AER)       # For ivreg (2SLS)
+library(plm)       # For Panel Data structures
+library(tidyverse) # For data cleaning
+library(stargazer) # For regression tables
+
+data <- data|>
+  mutate(int = int*100,#Convert interest rates to percentage points
+         Mnet = Mnet/1000) #Convert quantitative easing amount from millions to billions
+
+core <- data|>filter(Group == "Core")
+p_core <- pdata.frame(core, index = c("Country", "DATE"))
+
+core_2sls <- ivreg(int ~ HICP + LT10Y + ST3M + Mnet | 
+                    HICP + LT10Y + ST3M + lag(Mnet, 1), 
+                    data = p_core)
+
+summary(core_2sls, diagnostics = TRUE)
+
+peri <- data|>filter(Group == "Periphery")
+p_peri <- pdata.frame(peri, index = c("Country", "DATE"))
+
+peri_2sls <- ivreg(int ~ HICP + LT10Y + ST3M + Mnet | 
+                    HICP + LT10Y + ST3M + lag(Mnet, 1), 
+                    data = p_peri)
+
+summary(peri_2sls, diagnostics = TRUE)
+
+```
+
