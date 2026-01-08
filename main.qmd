@@ -5,7 +5,7 @@ format: html
 editor: visual
 ---
 
-## Link to the github project 
+## Link to the github project
 
 <https://github.com/morganelpgit/data_management_project.git>
 
@@ -27,24 +27,23 @@ This is a two-part inquiry that investigates both the transmission of unconventi
 
 To limit our research only to countries directly regulated by the European Central Bank, we have selected data only from the EMU. Sourcing data from publicly accessible websites such as the OECD and the ECB Data Portal, we will first run a regression analysis of corporate borrowing costs in the EMU against monthly asset purchases by the ECB (incorporating lags and proxies/instruments to represent generale economic policy tightness/looseness) to establish a benchmark coefficient for the EMU. Then, we will estimate country-specific coefficients and conduct cluster analysis (e.g. using KNN analysis) to determine which countries display the most similar coefficients, and highlight the economic features that define countries in the same cluster.
 
-
 ## Link to the sources
 
--   Quantitative Easing data : We are using the csv file "APP_breakdown_history" (click on the link "History of cumulative purchase breakdowns under the APP") downloaded from the webpage dedicated to the Asset Purchase Programme :  <https://www.ecb.europa.eu/mopo/implement/app/html/index.en.html)>. 
+-   Quantitative Easing data : We are using the csv file "APP_breakdown_history" (click on the link "History of cumulative purchase breakdowns under the APP") downloaded from the webpage dedicated to the Asset Purchase Programme : <https://www.ecb.europa.eu/mopo/implement/app/html/index.en.html)>.
 
 For all other datasets of the ECB Data Portal, we browsed the series name through the the search engine, select the option "All MU countries (20)" in the "Geographical areas", "select all", and download as csv files that contains all countries times series.
 
-- Cost of borrowing for corporations , Euro area, Monthly <https://data.ecb.europa.eu/search-results?searchTerm=Cost%20of%20borrowing%20for%20corporations>
+-   Cost of borrowing for corporations , Euro area, Monthly <https://data.ecb.europa.eu/search-results?searchTerm=Cost%20of%20borrowing%20for%20corporations>
 
 -   Direct investment, net, transactions, Monthly <https://data.ecb.europa.eu/search-results?searchTerm=Direct%20investment%2C%20net%2C%20transactions%2C%20Monthly>
 
 -   HICP - Overall index, Euro area, Monthly <https://data.ecb.europa.eu/search-results?searchTerm=HICP%20-%20Overall%20index%2C%20Euro%20area%2C%20Monthly>
 
--   Euribor 3-month - Historical close, average of observations through period, Euro area, Monthly <https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR3MD\_.HSTA>
+-   Euribor 3-month - Historical close, average of observations through period, Euro area, Monthly [https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR3MD\\\_.HSTA](https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR3MD_.HSTA){.uri}
 
--   Euribor 6-month - Historical close, average of observations through period, Euro area, Monthly <https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR6MD\_.HSTA>
+-   Euribor 6-month - Historical close, average of observations through period, Euro area, Monthly [https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR6MD\\\_.HSTA](https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR6MD_.HSTA){.uri}
 
--   Long-term interest rate for convergence purposes – 10-year maturity – denominated in euro – Euro area 20 (fixed composition) <https://data.ecb.europa.eu/search-results?searchTerm=Long-term%20interest%20rate%20for%20convergence%20purposes%20%E2%80%93%2010-year%20maturity%20%E2%80%93%20denominated%20in%20euro>
+-   Long-term interest rate for convergence purposes -- 10-year maturity -- denominated in euro -- Euro area 20 (fixed composition) <https://data.ecb.europa.eu/search-results?searchTerm=Long-term%20interest%20rate%20for%20convergence%20purposes%20%E2%80%93%2010-year%20maturity%20%E2%80%93%20denominated%20in%20euro>
 
 The ECB Data Portal <https://data.ecb.europa.eu/> is the European Central Bank's online delivery service for statistical data and related metadata and publications.
 
@@ -52,7 +51,7 @@ The ECB Data Portal <https://data.ecb.europa.eu/> is the European Central Bank's
 
 ### Quantitative Easing variables : the Asset Purchase Programme (2014)
 
--   Quantitative Easing (QE) Shocks (Source: APP_breakdown_history.csv from the ECB website): The monthly net amount in euro millions of ECB asset purchases. This dataset provides the breakdown of cumulative net purchases under the Asset Purchase Programme (APP) - the ECB's quantitative easing programme - covering the period 2014–2025. We focus on the first four columns of the dataset, which report monthly net purchases at book value for each of the four components of the APP, which are the corporate sector purchase programme (CSPP), the public sector purchase programme (PSPP), the asset-backed securities purchase programme (ABSPP) and the third covered bond purchase programme (CBPP3).
+-   Quantitative Easing (QE) Shocks (Source: APP_breakdown_history.csv from the ECB website): The monthly net amount in euro millions of ECB asset purchases. This dataset provides the breakdown of cumulative net purchases under the Asset Purchase Programme (APP) - the ECB's quantitative easing programme - covering the period 2014--2025. We focus on the first four columns of the dataset, which report monthly net purchases at book value for each of the four components of the APP, which are the corporate sector purchase programme (CSPP), the public sector purchase programme (PSPP), the asset-backed securities purchase programme (ABSPP) and the third covered bond purchase programme (CBPP3).
 
 ### Target variable : Corporate borrowing rates
 
@@ -64,10 +63,9 @@ The ECB Data Portal <https://data.ecb.europa.eu/> is the European Central Bank's
 
 -   Harmonised Index of Consumer Prices (HICP) (Source: ECB data portal). We will use this variable to compute the real inflation rate for each country.
 
--   Short term rates : Euribor 3-month & 6-month - Historical close, average of observations through period, Euro area, Monthly (Source: ECB data portal). Euribor is determined by the ECB’s monetary policy. These values are the average interest rates in the interbank market, and serve as a benchmark for interest rates to all non-financial agents (therefore more general than the corporate borrowing rate, our target variable). These nominal rates are common across all Euro area. We will then compute the real interest rate for each country. Using the Fisher approximation, the real interest rate is obtained by subtracting a country's inflation rate from the nominal interest rate.
+-   Short term rates : Euribor 3-month & 6-month - Historical close, average of observations through period, Euro area, Monthly (Source: ECB data portal). Euribor is determined by the ECB's monetary policy. These values are the average interest rates in the interbank market, and serve as a benchmark for interest rates to all non-financial agents (therefore more general than the corporate borrowing rate, our target variable). These nominal rates are common across all Euro area. We will then compute the real interest rate for each country. Using the Fisher approximation, the real interest rate is obtained by subtracting a country's inflation rate from the nominal interest rate.
 
--   Long-term interest rate – 10-year maturity – denominated in euro – Euro area 20 (Source: ECB data portal). This variable represents the yield on government bonds, and helps us to assess whether QE has had different effects on core and peripheral Euro area countries.
-
+-   Long-term interest rate -- 10-year maturity -- denominated in euro -- Euro area 20 (Source: ECB data portal). This variable represents the yield on government bonds, and helps us to assess whether QE has had different effects on core and peripheral Euro area countries.
 
 ## Set-up
 
@@ -85,7 +83,7 @@ library(stringr)
 library(ggplot2)
 ```
 
-## Data Loading & Data Cleaning 
+## Data Loading & Data Cleaning
 
 ### Quantitative Easing variable : the Asset Purchase Programme (2014)
 
@@ -163,15 +161,13 @@ QE_mnet <- QE_mnet|>
 
 ```
 
-
-|                   | Before cleaning     | After cleaning         |
-|-------------------|---------------------|------------------------|
+|                   | Before cleaning | After cleaning          |
+|-------------------|-----------------|-------------------------|
 | Number of columns | `r QE_init_col` | `r ncol(QE_mnet)`       |
 | Number of rows    | `r QE_init_row` | `r nrow(QE_mnet)`       |
 | Number of NAs     | `r QE_init_na`  | `r sum(is.na(QE_mnet))` |
 
-
-### Target variable : corporate borrowing rates 
+### Target variable : corporate borrowing rates
 
 Loading Data: Corporate borrowing rates per country (downloaded from the ECB data portal)
 
@@ -217,13 +213,13 @@ corp_int <- corp_int|>
   )
 ```
 
-|                   | Before cleaning   | After cleaning       |
-|-------------------|-------------------|----------------------|
+|                   | Before cleaning   | After cleaning           |
+|-------------------|-------------------|--------------------------|
 | Number of columns | `r corp_init_col` | `r ncol(corp_int)`       |
 | Number of rows    | `r corp_init_row` | `r nrow(corp_int)`       |
 | Number of NAs     | `r corp_init_na`  | `r sum(is.na(corp_int))` |
 
-The remaining NAs originate from missing data for Hungary (HR) and three missing observations for Lithuania (LT). We will eventually remove this country’s values from the analysis.
+The remaining NAs originate from missing data for Hungary (HR) and three missing observations for Lithuania (LT). We will eventually remove this country's values from the analysis.
 
 ### First merge
 
@@ -288,7 +284,7 @@ plot(pred) +
 
 ```
 
-### A few comments on data loading and cleaning 
+### A few comments on data loading and cleaning
 
 Each data file downloaded from the ECB Data Portal is loaded and cleaned as follows:
 
