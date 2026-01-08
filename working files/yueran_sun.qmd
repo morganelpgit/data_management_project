@@ -203,8 +203,9 @@ library(plm)       # For Panel Data structures
 library(tidyverse) # For data cleaning
 library(stargazer) # For regression tables
 
-data <- data|>
-  mutate(int = int*100,#Convert interest rates to percentage points
+reg_data <- data|>
+  select(Year, Month, DATE, Mnet, Country, int, HICP, ST3M, LT10Y)|>
+  mutate(int = int*100,#Convert interest rates to basis points
          Mnet = Mnet/1000) #Convert quantitative easing amount from millions to billions
 
 core <- data|>filter(Group == "Core")
@@ -225,5 +226,68 @@ peri_2sls <- ivreg(int ~ HICP + LT10Y + ST3M + Mnet |
 
 summary(peri_2sls, diagnostics = TRUE)
 
+other <- data|>filter(Group == "Periphery")
+p_other <- pdata.frame(other, index = c("Country", "DATE"))
+
+other_2sls <- ivreg(int ~ HICP + LT10Y + ST3M + Mnet | 
+                    HICP + LT10Y + ST3M + lag(Mnet, 1), 
+                    data = p_other)
+
+summary(other_2sls, diagnostics = TRUE)
+
 ```
+
+##Regressions by country
+
+```{r}
+
+library(broom)
+
+countries <- unique(reg_data$Country)
+country_results <- list()
+
+print(paste("Starting loop for", length(countries), "countries..."))
+
+for (ctry in countries) {
+  
+  # Filter for country
+  temp_data <- reg_data |>dplyr::filter(Country == ctry)
+  
+  # Remove rows with any NAs in our specific variables
+  clean_data <- temp_data|>
+    tidyr::drop_na(int, HICP, LT10Y, ST3M, Mnet)
+  
+  num_obs <- nrow(clean_data)
+  
+  if(num_obs > 10) {
+    # Try the regression
+    try_result <- try({
+      model <- lm(int ~ HICP + LT10Y + ST3M + Mnet, data = clean_data)
+      country_results[[ctry]] <- broom::tidy(model) %>%
+        dplyr::mutate(country = ctry)
+    }, silent = FALSE)
+    
+    if(inherits(try_result, "try-error")) {
+      print(paste("!", ctry, "failed during lm() calculation."))
+    } else {
+      print(paste("✓", ctry, "processed successfully with", num_obs, "rows."))
+    }
+    
+  } else {
+    print(paste("X", ctry, "skipped: only has", num_obs, "valid rows."))
+  }
+}
+
+# Combine
+if(length(country_results) > 0) {
+  final_coefficients <- dplyr::bind_rows(country_results)
+  print("Success! 'final_coefficients' is now populated.")
+} else {
+  print("ERROR: All countries failed or were skipped.")
+}
+
+final_coefficients|> filter(term == "Mnet", std.error < 0.05)
+
+```
+
 
