@@ -515,48 +515,141 @@ data <- data |>
   dplyr::select(-c(`Invest`))
 ```
 
-### Overall time series analysis 
+### VISUALISATION
+
+- repartition of the APP per type (CSPP etc) over time. 
 
 ```{r}
+
+QE_long <- QE_mnet |>
+  dplyr::select(DATE, ABSPP, CBPP3, CSPP, PSPP) |>
+  pivot_longer(
+    cols = -DATE,
+    names_to = "Programme",
+    values_to = "Value"
+  )
+
+ggplot(QE_long, aes(x = DATE, y = Value, fill = Programme)) +
+  geom_col() +
+  labs(
+    title = "Net asset purchases under APP by Programme",
+    x = "Date",
+    y = "Net Monthly Purchases (€ Millions)",
+    fill = "Programme"
+  ) +
+  theme_minimal() +
+  scale_fill_viridis_d()
+
+```
+
+comments see <https://www.ecb.europa.eu/mopo/implement/app/html/index.en.html>
+
+- carte de l'europe pour clusters, litterature
+
+- time series analysis of int, trend cluster per country (history) facet wrap.
+
+```{r}
+library(dplyr)
 library(ggplot2)
 
-corp_int |>
-  drop_na(int) |>
-  filter(DATE >= as.Date("2010-10-01")) |> #so we see the drop from 2014
-  ggplot(aes(x = DATE, y = int)) +
-  geom_line(color = "steelblue") +
+data |>
+  filter(
+    DATE >= as.Date("2010-10-01"),
+    Group == "Core",               # On ne garde que les core
+    Country != "U2"                # Pour ne pas faire un facet U2
+  ) |>
+  left_join(
+    data |> 
+      filter(Country == "U2") |> 
+      dplyr::select(DATE, u2_int = int),  # On récupère U2
+    by = "DATE"
+  ) |>
+  ggplot() +
+  geom_line(aes(x = DATE, y = u2_int),
+            color = "black", linewidth = 0.5) +
+  geom_line(aes(x = DATE, y = int),
+            color = "steelblue") +
   facet_wrap(~ Country, scales = "free_y") +
   labs(
-    title = "Evolution of Corporate Borrowing Rates by Country",
+    title = "Corporate Borrowing Rates – Core Countries vs. Euro Area (U2)",
     x = "Date",
     y = "Corporate borrowing rate (%)"
   ) +
   theme_minimal()
 
-# increase for each country in 2022-23 because tighening of monetary policy, low or negative values of APP
-```
 
-
-```{r}
-# countries vs MU average of cost of borrowing
-corp_int |>
-  drop_na(int) |>
-  filter(DATE >= as.Date("2010-10-01")) |> 
-  ggplot(aes(x = DATE, y = int, group = Country)) +
-  geom_line(aes(color = Country), alpha = 0.5) +
-  geom_line(
-    data = subset(corp_int, Country == "U2"),
-    aes(x = DATE, y = int),
-    color = "black",
-    linewidth = 1.2
-  ) +
+data |>
+  filter(
+    DATE >= as.Date("2010-10-01"),
+    Group == "Periphery",               # keep core
+    Country != "U2"                # pour pas faire un facet U2
+  ) |>
+  left_join(
+    data |> 
+      filter(Country == "U2") |> 
+      dplyr::select(DATE, u2_int = int),  # get back u2
+    by = "DATE"
+  ) |>
+  ggplot() +
+  geom_line(aes(x = DATE, y = u2_int),
+            color = "black", linewidth = 0.5) +
+  geom_line(aes(x = DATE, y = int),
+            color = "steelblue") +
+  facet_wrap(~ Country, scales = "free_y") +
   labs(
-    title = "Mnet",
+    title = "Corporate Borrowing Rates – Core Countries vs. Euro Area (U2)",
     x = "Date",
-    y = "Mnet"
+    y = "Corporate borrowing rate (%)"
   ) +
   theme_minimal()
 ```
+See from the graph cost of borrowing is lower than EMU average for core countries, and above average for periphery. 
+
+- simple scatterplot qe/int (can't really compare if we facet per group)
+
+```{r}
+data |>
+  drop_na(Mnet, int) |>     
+  ggplot(aes(x = Mnet, y = int)) +
+  geom_point(alpha = 0.4, color = "steelblue") +
+  labs(
+    title = "Scatterplot: Corporate Rates (int) vs QE Amount (Mnet)",
+    x = "Monthly QE net purchases (Mnet)",
+    y = "Corporate borrowing rate (int, %)"
+  ) +
+  theme_minimal()
+
+library(ggplot2)
+library(dplyr)
+
+data |>
+  drop_na(Mnet, int) |>
+  mutate(Group2 = ifelse(Country == "U2", "U2", Group)) |>
+  ggplot(aes(x = Mnet, y = int, color = Group2)) +
+  geom_point(alpha = 0.5) +
+  scale_color_manual(
+    values = c(
+      "Core" = "steelblue",
+      "Periphery" = "firebrick",
+      "Other" = "lightgrey",
+      "U2" = "black"
+    )
+  ) +
+  labs(
+    title = "Corporate Borrowing Rate vs QE (Mnet)",
+    subtitle = "Color by country group, black = Euro area aggregate (U2)",
+    x = "Monthly ECB Net Asset Purchases (Mnet)",
+    y = "Corporate borrowing rate (int, %)",
+    color = "Group"
+  ) +
+  theme_minimal()
+
+```
+comment : overall negative slope, core below, not very satisfying
+
+maybe add the Alyssa's visu of coefficients  from phase 2 ?
+
+
 
 ### Clustering with litterature 
 
