@@ -245,59 +245,6 @@ qe_int <- left_join(QE_mnet,corp_int, by = join_by(DATE)
 data1 <- qe_int
 ```
 
-## Graphical representation of target variable
-
-```{r}
-#| message: false
-#| warning: false
-
-#Preliminary visusalization of varying differences between corporate borrowing rates of each country and the EMU average 
-
-emu_avg_rates <- corp_int |>
-  drop_na() |>
-  filter(Country == "U2") |>
-  dplyr::select(DATE, EMU_Avg = int)
-
-corp_int_deviation <- corp_int |>
-  drop_na() |>
-  filter(Country != "U2") |>
-  left_join(emu_avg_rates, by = "DATE") |>
-  mutate(Deviation = int - EMU_Avg) |>
-  dplyr::select(-EMU_Avg)
-
-corp_int_deviation|>
-  ggplot(aes(x = DATE, y = Deviation, group = Country, color = Country)) +
-  geom_line(alpha = 0.7) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
-  labs(
-    title = "Corporate Borrowing Rate Deviation from EMU Average",
-    x = "Month/Year",
-    y = "Deviation from EMU Average Rate (Percentage Points)"
-  ) +
-  theme_minimal()
-
-#Preliminary visualization of the cross-country differences between their relationships with QE amounts
-
-library(ggeffects)
-
-qe_int <- qe_int |>
-  arrange(Country, DATE)
-
-qe_int <- qe_int |>
-  group_by(Country) |>
-  mutate(Mnet_lag1 = lag(Mnet, 1)) |> 
-  ungroup()
-
-qe_nona <- drop_na(qe_int)
-
-fit = lm(formula = int ~Mnet_lag1*Country, data=qe_nona)
-pred = ggpredict(fit, terms = c("Mnet_lag1","Country"))
-plot(pred) +
-  scale_color_viridis_d(option = "turbo") +
-  ggtitle(NULL)
-
-```
-
 ### A few comments on data loading and cleaning 
 
 Each data file downloaded from the ECB Data Portal is loaded and cleaned as follows:
@@ -515,4 +462,339 @@ data <- left_join(data4, LT10Y_int, by = join_by(DATE, Country))
 | Number of NAs     | `r LT10Y_int_init_na`  | `r sum(is.na(LT10Y_int))` |
 
 We still observe many NAs because Estonia is included, and its data only start in 2020.
+
+
+
+## Clustering choice (ref to litterature), code dans data, map 
+
+### Clustering with litterature 
+
+Large literature identifies core and peripheral countries in the EMU (to develop). Based on BERG WP (2024) we identify : 
+CORE = BE, FR, DE, LU, NL
+PERIPHERY = GR, IE, IT, PT, ES
+
+```{r}
+CORE <- c("BE", "FR", "DE", "LU", "NL")
+PERIPHERY <- c("GR", "IE", "IT", "PT", "ES")
+OTHER <- c("AT","CY", "EE", "FI", "HR", "LT", "LV", "MT", "SI", "SK")
+
+data <- data |>
+  dplyr::select(-c(`Invest`)) |>
+  mutate(Mnet_lag1 = lag(Mnet, 1)) |> 
+  mutate(Group = case_when(
+    Country %in% CORE ~ "Core",
+    Country %in% PERIPHERY ~ "Periphery",
+    Country %in% OTHER ~ "Other"
+  ))
+```
+
+```{r}
+library(dplyr)
+
+desc_stats <- data |>
+  filter(DATE >= as.Date("2014-10-01")) |>
+  group_by(Group) |>
+  summarise(
+    n_obs   = n(),
+    mean    = mean(int, na.rm = TRUE),
+    median  = median(int, na.rm = TRUE),
+    sd      = sd(int, na.rm = TRUE),
+    min     = min(int, na.rm = TRUE),
+    max     = max(int, na.rm = TRUE)
+  )
+
+desc_stats
+```
+
+less interest rate for core countries 
+
+### Visualisations : APP shares, ts of int, scatterplot 
+
+
+- selected countries 
+need eurostat sf giscoR
+
+Thanks to the package : 
+<https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>
+Put colors on selected countries
+```{r}
+library(eurostat)
+library(sf)
+library(giscoR)
+library(ggplot2)
+library(dplyr)
+
+SHP_0 <- get_eurostat_geospatial(
+  resolution = 10,
+  nuts_level = 0,
+  year = 2016
+)
+
+SHP_0 %>%
+  mutate(color_group = case_when(
+    id %in% c("BE", "FR", "DE", "LU", "NL") ~ "Blue",
+    id %in%  c("GR", "IE", "IT", "PT", "ES") ~ "Red",
+    TRUE ~ "Other"
+  )) %>%
+  ggplot(aes(fill = color_group)) +
+  geom_sf(color = "white") +
+  scale_fill_manual(
+    values = c(
+      "Blue" = "steelblue",
+      "Red" = "firebrick",
+      "Other" = "grey80"
+    ),
+    name = ""
+  ) +
+  scale_x_continuous(limits = c(-10, 35)) +
+  scale_y_continuous(limits = c(35, 65)) +
+  labs(title = "Highlighting core (blue) and periphery (red) countries of the EMU") +
+  theme_void()
+
+```
+
+- share of the APP per type (CSPP etc) over time. 
+
+```{r}
+
+QE_long <- QE_mnet |>
+  dplyr::select(DATE, ABSPP, CBPP3, CSPP, PSPP) |>
+  pivot_longer(
+    cols = -DATE,
+    names_to = "Programme",
+    values_to = "Value"
+  )
+
+ggplot(QE_long, aes(x = DATE, y = Value, fill = Programme)) +
+  geom_col() +
+  labs(
+    title = "Net asset purchases under APP by Programme",
+    x = "Date",
+    y = "Net Monthly Purchases (€ Millions)",
+    fill = "Programme"
+  ) +
+  theme_minimal() +
+  scale_fill_viridis_d()
+
+```
+
+comments see <https://www.ecb.europa.eu/mopo/implement/app/html/index.en.html>
+
+- carte de l'europe pour clusters, litterature
+
+- time series analysis of int, trend cluster per country (history) facet wrap.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+data |>
+  filter(
+    DATE >= as.Date("2010-10-01"),
+    Group == "Core",               # On ne garde que les core
+    Country != "U2"                # Pour ne pas faire un facet U2
+  ) |>
+  left_join(
+    data |> 
+      filter(Country == "U2") |> 
+      dplyr::select(DATE, u2_int = int),  # On récupère U2
+    by = "DATE"
+  ) |>
+  ggplot() +
+  geom_line(aes(x = DATE, y = u2_int),
+            color = "black", linewidth = 0.5) +
+  geom_line(aes(x = DATE, y = int),
+            color = "steelblue") +
+  facet_wrap(~ Country, scales = "free_y") +
+  labs(
+    title = "Corporate Borrowing Rates – Core Countries vs. Euro Area (U2)",
+    x = "Date",
+    y = "Corporate borrowing rate (%)"
+  ) +
+  theme_minimal()
+
+
+data |>
+  filter(
+    DATE >= as.Date("2010-10-01"),
+    Group == "Periphery",              
+    Country != "U2"        
+  ) |>
+  left_join(
+    data |> 
+      filter(Country == "U2") |> 
+      dplyr::select(DATE, u2_int = int), 
+    by = "DATE"
+  ) |>
+  ggplot() +
+  geom_line(aes(x = DATE, y = u2_int),
+            color = "black", linewidth = 0.5) +
+  geom_line(aes(x = DATE, y = int),
+            color = "firebrick") +
+  facet_wrap(~ Country, scales = "free_y") +
+  labs(
+    title = "Corporate Borrowing Rates – Periphery Countries vs. Euro Area (U2)",
+    x = "Date",
+    y = "Corporate borrowing rate (%)"
+  ) +
+  theme_minimal()
+```
+See from the graph cost of borrowing is lower than EMU average for core countries, and above average for periphery. 
+
+- simple scatterplot qe/int (can't really compare if we facet per group)
+
+```{r}
+#| fig.height: 5
+#| fig.width: 8
+
+data |>
+  drop_na(Mnet, int) |>
+  mutate(Group2 = ifelse(Country == "U2", "U2", Group)) |>
+  ggplot(aes(x = Mnet, y = int, color = Group2)) +
+  geom_point(alpha = 0.5,size=1.5) +
+  scale_color_manual(
+    values = c(
+      "Core" = "steelblue",
+      "Periphery" = "firebrick",
+      "Other" = "lightgrey",
+      "U2" = "black"
+    )
+  ) +
+  labs(
+    title = "Corporate Borrowing Rate vs QE (Mnet)",
+    subtitle = "Color by country group, black = Euro area aggregate (U2)",
+    x = "Monthly ECB Net Asset Purchases (Mnet)",
+    y = "Corporate borrowing rate (int, %)",
+    color = "Group"
+  ) +
+  theme_minimal()
+```
+comment : overall negative slope, core below, not very clear 
+
+maybe add the Alyssa's visu of coefficients  from phase 2 ?
+
+
+## Models 
+
+### Regression QE over int (regression morgane, dire qu’on a pas de résultat donc un var est plus approprié), scatterplots par groupes 
+
+
+```{r}
+data <- data |>
+  mutate(Mnet_lag1 = lag(Mnet, 1))
+```
+
+First, one regression per country without fixed effect (fixed effect doesn't work, use simple lm). 
+
+```{r}
+library(broom)
+
+country_regs <- data |>
+  filter(Country != "U2") |>
+  group_by(Country) |>
+  do({
+    model <- lm(int ~ Mnet_lag1,data = .)
+    tidy(model) |>
+      mutate(r2 = glance(model)$r.squared)
+  })
+
+# Create df of coefficient per country, their pvalue, r2 
+qe_country <- country_regs |>
+  filter(term == "Mnet_lag1") |>
+  dplyr::select(Country, estimate, std.error, p.value, r2)
+
+qe_country <- qe_country |>
+  mutate(Group = case_when(
+    Country %in% CORE ~ "Core",
+    Country %in% PERIPHERY ~ "Periphery",
+    Country %in% OTHER ~ "Other"
+  ))
+
+qe_country <- qe_country |>
+  mutate(
+    signif = case_when(
+      p.value < 0.01 ~ "***",
+      p.value < 0.05 ~ "**",
+      p.value < 0.10 ~ "*",
+      TRUE ~ ""
+    )
+  )
+
+qe_country
+```
+
+```{r}
+# Difference core/periphery
+core_tab <- qe_country |>
+  filter(Group == "Core")
+
+peri_tab <- qe_country |>
+  filter(Group == "Periphery")
+
+core_tab
+peri_tab
+mean(core_tab$estimate) #average of estimates
+mean(peri_tab$estimate)
+
+```
+
+We expect : lower coef, less significant for core 
+Because more fixed term contracts : interest rate vary less (cf litterature)
+
+### Graphical representation of target variable (Alyssa)
+
+```{r}
+#| message: false
+#| warning: false
+
+#Preliminary visusalization of varying differences between corporate borrowing rates of each country and the EMU average 
+
+emu_avg_rates <- corp_int |>
+  drop_na() |>
+  filter(Country == "U2") |>
+  dplyr::select(DATE, EMU_Avg = int)
+
+corp_int_deviation <- corp_int |>
+  drop_na() |>
+  filter(Country != "U2") |>
+  left_join(emu_avg_rates, by = "DATE") |>
+  mutate(Deviation = int - EMU_Avg) |>
+  dplyr::select(-EMU_Avg)
+
+corp_int_deviation|>
+  ggplot(aes(x = DATE, y = Deviation, group = Country, color = Country)) +
+  geom_line(alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  labs(
+    title = "Corporate Borrowing Rate Deviation from EMU Average",
+    x = "Month/Year",
+    y = "Deviation from EMU Average Rate (Percentage Points)"
+  ) +
+  theme_minimal()
+
+#Preliminary visualization of the cross-country differences between their relationships with QE amounts
+
+library(ggeffects)
+
+qe_int <- qe_int |>
+  arrange(Country, DATE)
+
+qe_int <- qe_int |>
+  group_by(Country) |>
+  mutate(Mnet_lag1 = lag(Mnet, 1)) |> 
+  ungroup()
+
+qe_nona <- drop_na(qe_int)
+
+fit = lm(formula = int ~Mnet_lag1*Country, data=qe_nona)
+pred = ggpredict(fit, terms = c("Mnet_lag1","Country"))
+plot(pred) +
+  scale_color_viridis_d(option = "turbo") +
+  ggtitle(NULL)
+
+```
+
+### var (regression yueran sun), IRF graphs
+
+# Conclusion
 
