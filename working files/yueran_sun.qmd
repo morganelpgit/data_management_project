@@ -203,7 +203,7 @@ library(plm)       # For Panel Data structures
 library(tidyverse) # For data cleaning
 library(stargazer) # For regression tables
 
-reg_data <- data|>
+model_data <- data|>
   select(Year, Month, DATE, Mnet, Country, int, HICP, ST3M, LT10Y)|>
   mutate(int = int*100,#Convert interest rates to basis points
          Mnet = Mnet/1000) #Convert quantitative easing amount from millions to billions
@@ -286,8 +286,56 @@ if(length(country_results) > 0) {
   print("ERROR: All countries failed or were skipped.")
 }
 
-final_coefficients|> filter(term == "Mnet", std.error < 0.05)
+final_coefficients|> filter(term == "Mnet", p.value < 0.05)
 
 ```
 
+##ARMA or VAR testing
+
+#First, ensure stationarity using first differences
+
+```{r}
+
+library(vars)
+library(tseries)
+
+prep_country_var <- function(model_data, country) {
+  country_df <- model_data |>
+    filter(Country == country) |>
+    arrange(DATE) |>
+    # Select our key system variables
+    select(int, Mnet, HICP, LT10Y, ST3M) |>
+    # Convert to differences to ensure stationarity
+    mutate(across(everything(), ~ .x - lag(.x))) |>
+    drop_na()
+  
+  return(as.ts(country_df))
+}
+
+```
+
+Second, create a for loop to fit a VAR model for each country
+
+```{r}
+
+countries <- unique(model_data$Country)
+var_results <- list()
+
+for (ctry in countries) {
+  # 1. Prepare time series
+  ts_data <- prep_country_var(df, ctry)
+  
+  # 2. Select optimal lags (usually based on AIC)
+  lag_select <- VARselect(ts_data, lag.max = 6, type = "both")
+  opt_lag <- lag_select$selection["AIC(n)"]
+  
+  # 3. Run the VAR
+  try({
+    model_var <- VAR(ts_data, p = opt_lag, type = "both")
+    var_results[[ctry]] <- model_var
+    print(paste("✓ VAR completed for", ctry))
+  }, silent = TRUE)
+}
+
+```
 
