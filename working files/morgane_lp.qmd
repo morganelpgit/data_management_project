@@ -476,46 +476,93 @@ data <- left_join(data4, LT10Y_int, by = join_by(DATE, Country))
 | Number of NAs     | `r LT10Y_int_init_na`  | `r sum(is.na(LT10Y_int))` |
 
 We still observe many NAs because Estonia is included, and its data only start in 2020.
+
 ## Final phase
 
-### Cleaning
+### Clustering with litterature 
+
+Large literature identifies core and peripheral countries in the EMU (to develop). Based on BERG WP (2024) we identify : 
+CORE = BE, FR, DE, LU, NL
+PERIPHERY = GR, IE, IT, PT, ES
 
 ```{r}
-# clean environment
-rm(data1,data2,data3,data4)
-```
-
-
-```{r}
-#ajouter CSPP from 2014 doesn't work
-# ajouter CSPP from 2014
-oct_fill <- tibble(
-  DATE = as.Date("2014-10-31"),
-  CSPP = 0
-)
-
-qe_nona_extended <- qe_nona |>
-  bind_rows(oct_fill) |>
-  arrange(DATE)
-
-CSPP_panel <- qe_nona_extended |>
-  dplyr::select(DATE, CSPP) |>
-  group_by(DATE) |>
-  summarise(CSPP = first(CSPP), .groups = "drop")
-  # or: distinct(DATE, .keep_all = TRUE)
+CORE <- c("BE", "FR", "DE", "LU", "NL")
+PERIPHERY <- c("GR", "IE", "IT", "PT", "ES")
+OTHER <- c("AT","CY", "EE", "FI", "HR", "LT", "LV", "MT", "SI", "SK")
 
 data <- data |>
-  left_join(CSPP_panel, by = "DATE")
+  dplyr::select(-c(`Invest`)) |>
+  mutate(Mnet_lag1 = lag(Mnet, 1)) |> 
+  mutate(Group = case_when(
+    Country %in% CORE ~ "Core",
+    Country %in% PERIPHERY ~ "Periphery",
+    Country %in% OTHER ~ "Other"
+  ))
 ```
-
 
 ```{r}
-#remove columns
-data <- data |>
-  dplyr::select(-c(`Invest`))
+library(dplyr)
+
+desc_stats <- data |>
+  filter(DATE >= as.Date("2014-10-01")) |>
+  group_by(Group) |>
+  summarise(
+    n_obs   = n(),
+    mean    = mean(int, na.rm = TRUE),
+    median  = median(int, na.rm = TRUE),
+    sd      = sd(int, na.rm = TRUE),
+    min     = min(int, na.rm = TRUE),
+    max     = max(int, na.rm = TRUE)
+  )
+
+desc_stats
 ```
+
+less interest rate for core countries 
 
 ### VISUALISATION
+
+- selected countries 
+need eurostat sf giscoR
+
+Thanks to the package : 
+<https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>
+Put colors on selected countries
+```{r}
+library(eurostat)
+library(sf)
+library(giscoR)
+library(ggplot2)
+library(dplyr)
+
+SHP_0 <- get_eurostat_geospatial(
+  resolution = 10,
+  nuts_level = 0,
+  year = 2016
+)
+
+SHP_0 %>%
+  mutate(color_group = case_when(
+    id %in% c("BE", "FR", "DE", "LU", "NL") ~ "Blue",
+    id %in%  c("GR", "IE", "IT", "PT", "ES") ~ "Red",
+    TRUE ~ "Other"
+  )) %>%
+  ggplot(aes(fill = color_group)) +
+  geom_sf(color = "white") +
+  scale_fill_manual(
+    values = c(
+      "Blue" = "steelblue",
+      "Red" = "firebrick",
+      "Other" = "grey80"
+    ),
+    name = ""
+  ) +
+  scale_x_continuous(limits = c(-10, 35)) +
+  scale_y_continuous(limits = c(35, 65)) +
+  labs(title = "Highlighting core (blue) and periphery (red) countries of the EMU") +
+  theme_void()
+
+```
 
 - share of the APP per type (CSPP etc) over time. 
 
@@ -638,45 +685,6 @@ comment : overall negative slope, core below, not very clear
 maybe add the Alyssa's visu of coefficients  from phase 2 ?
 
 
-### Clustering with litterature 
-
-Large literature identifies core and peripheral countries in the EMU (to develop). Based on BERG WP (2024) we identify : 
-CORE = BE, FR, DE, LU, NL
-PERIPHERY = GR, IE, IT, PT, ES
-
-```{r}
-CORE <- c("BE", "FR", "DE", "LU", "NL")
-PERIPHERY <- c("GR", "IE", "IT", "PT", "ES")
-OTHER <- c("AT","CY", "EE", "FI", "HR", "LT", "LV", "MT", "SI", "SK")
-
-data <- data |>
-  mutate(Group = case_when(
-    Country %in% CORE ~ "Core",
-    Country %in% PERIPHERY ~ "Periphery",
-    Country %in% OTHER ~ "Other"
-  ))
-```
-
-```{r}
-library(dplyr)
-
-desc_stats <- data |>
-  filter(DATE >= as.Date("2014-10-01")) |>
-  group_by(Group) |>
-  summarise(
-    n_obs   = n(),
-    mean    = mean(int, na.rm = TRUE),
-    median  = median(int, na.rm = TRUE),
-    sd      = sd(int, na.rm = TRUE),
-    min     = min(int, na.rm = TRUE),
-    max     = max(int, na.rm = TRUE)
-  )
-
-desc_stats
-```
-
-less interest rate for core countries 
-
 ### Best lag with criterion
 
 Faire tests du meilleur lag
@@ -685,10 +693,7 @@ Faire tests du meilleur lag
 
 ```{r}
 data <- data |>
-  group_by(Country) |>
-  arrange(DATE) |>
-  mutate(Mnet_lag1 = lag(Mnet, 1)) |>
-  ungroup()
+  mutate(Mnet_lag1 = lag(Mnet, 1))
 ```
 
 First, one regression per country without fixed effect (fixed effect doesn't work, use simple lm). 
@@ -700,7 +705,7 @@ country_regs <- data |>
   filter(Country != "U2") |>
   group_by(Country) |>
   do({
-    model <- lm(int ~ Mnet_lag1 + HICP + ST3M + LT10Y, data = .)
+    model <- lm(int ~ Mnet_lag1,data = .)
     tidy(model) |>
       mutate(r2 = glance(model)$r.squared)
   })

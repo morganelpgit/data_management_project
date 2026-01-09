@@ -6,6 +6,15 @@ format:
 editor: visual
 ---
 
+(to delete) Header for pdf rendering 
+title: "Main"
+author: "Yueran & Morgane"
+format:
+  pdf:
+    toc: true        # table of contents
+    toc_depth: 1     # depth of headings
+editor: visual
+
 ## Link to the github project 
 
 <https://github.com/morganelpgit/data_management_project.git>
@@ -506,3 +515,4 @@ data <- left_join(data4, LT10Y_int, by = join_by(DATE, Country))
 | Number of NAs     | `r LT10Y_int_init_na`  | `r sum(is.na(LT10Y_int))` |
 
 We still observe many NAs because Estonia is included, and its data only start in 2020.
+
