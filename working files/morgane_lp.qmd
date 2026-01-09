@@ -517,6 +517,49 @@ data <- data |>
 
 ### VISUALISATION
 
+
+- selected countries 
+need eurostat sf giscoR
+
+Thanks to the package : 
+<https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>
+Put colors on selected countries
+```{r}
+library(eurostat)
+library(sf)
+library(giscoR)
+library(ggplot2)
+library(dplyr)
+
+SHP_0 <- get_eurostat_geospatial(
+  resolution = 10,
+  nuts_level = 0,
+  year = 2016
+)
+
+SHP_0 %>%
+  mutate(color_group = case_when(
+    id %in% c("BE", "FR", "DE", "LU", "NL") ~ "Blue",
+    id %in%  c("GR", "IE", "IT", "PT", "ES") ~ "Red",
+    TRUE ~ "Other"
+  )) %>%
+  ggplot(aes(fill = color_group)) +
+  geom_sf(color = "white") +
+  scale_fill_manual(
+    values = c(
+      "Blue" = "steelblue",
+      "Red" = "firebrick",
+      "Other" = "grey80"
+    ),
+    name = ""
+  ) +
+  scale_x_continuous(limits = c(-10, 35)) +
+  scale_y_continuous(limits = c(35, 65)) +
+  labs(title = "Highlighting core (blue) and periphery (red) countries of the EMU") +
+  theme_void()
+
+```
+
 - share of the APP per type (CSPP etc) over time. 
 
 ```{r}
