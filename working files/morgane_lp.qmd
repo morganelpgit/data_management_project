@@ -517,7 +517,7 @@ data <- data |>
 
 ### VISUALISATION
 
-- repartition of the APP per type (CSPP etc) over time. 
+- share of the APP per type (CSPP etc) over time. 
 
 ```{r}
 
@@ -581,23 +581,23 @@ data |>
 data |>
   filter(
     DATE >= as.Date("2010-10-01"),
-    Group == "Periphery",               # keep core
-    Country != "U2"                # pour pas faire un facet U2
+    Group == "Periphery",              
+    Country != "U2"        
   ) |>
   left_join(
     data |> 
       filter(Country == "U2") |> 
-      dplyr::select(DATE, u2_int = int),  # get back u2
+      dplyr::select(DATE, u2_int = int), 
     by = "DATE"
   ) |>
   ggplot() +
   geom_line(aes(x = DATE, y = u2_int),
             color = "black", linewidth = 0.5) +
   geom_line(aes(x = DATE, y = int),
-            color = "steelblue") +
+            color = "firebrick") +
   facet_wrap(~ Country, scales = "free_y") +
   labs(
-    title = "Corporate Borrowing Rates – Core Countries vs. Euro Area (U2)",
+    title = "Corporate Borrowing Rates – Periphery Countries vs. Euro Area (U2)",
     x = "Date",
     y = "Corporate borrowing rate (%)"
   ) +
@@ -608,25 +608,14 @@ See from the graph cost of borrowing is lower than EMU average for core countrie
 - simple scatterplot qe/int (can't really compare if we facet per group)
 
 ```{r}
-data |>
-  drop_na(Mnet, int) |>     
-  ggplot(aes(x = Mnet, y = int)) +
-  geom_point(alpha = 0.4, color = "steelblue") +
-  labs(
-    title = "Scatterplot: Corporate Rates (int) vs QE Amount (Mnet)",
-    x = "Monthly QE net purchases (Mnet)",
-    y = "Corporate borrowing rate (int, %)"
-  ) +
-  theme_minimal()
-
-library(ggplot2)
-library(dplyr)
+#| fig.height: 5
+#| fig.width: 8
 
 data |>
   drop_na(Mnet, int) |>
   mutate(Group2 = ifelse(Country == "U2", "U2", Group)) |>
   ggplot(aes(x = Mnet, y = int, color = Group2)) +
-  geom_point(alpha = 0.5) +
+  geom_point(alpha = 0.5,size=1.5) +
   scale_color_manual(
     values = c(
       "Core" = "steelblue",
@@ -643,12 +632,10 @@ data |>
     color = "Group"
   ) +
   theme_minimal()
-
 ```
-comment : overall negative slope, core below, not very satisfying
+comment : overall negative slope, core below, not very clear 
 
 maybe add the Alyssa's visu of coefficients  from phase 2 ?
-
 
 
 ### Clustering with litterature 
