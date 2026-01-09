@@ -476,7 +476,7 @@ data <- left_join(data4, LT10Y_int, by = join_by(DATE, Country))
 | Number of NAs     | `r LT10Y_int_init_na`  | `r sum(is.na(LT10Y_int))` |
 
 We still observe many NAs because Estonia is included, and its data only start in 2020.
-## Final phase to discuss 
+## Final phase
 
 ### Cleaning
 
@@ -601,9 +601,7 @@ less interest rate for core countries
 
 Faire tests du meilleur lag
 
-### per country estimation with controls A CORRIGER POUR METTRE SUR MAIN 
-
-
+### per country estimation with controls 
 
 ```{r}
 data <- data |>
@@ -612,7 +610,6 @@ data <- data |>
   mutate(Mnet_lag1 = lag(Mnet, 1)) |>
   ungroup()
 ```
-
 
 First, one regression per country without fixed effect (fixed effect doesn't work, use simple lm). 
 
@@ -671,108 +668,9 @@ mean(peri_tab$estimate)
 We expect : lower coef, less significant for core 
 Because more fixed term contracts : interest rate vary less (cf litterature)
 
-### estimation with fixed effect with controls (pas exploitable)
 
 use plm library 
 model summary
-
-```{r}
-library(broom)
-library(fixest)
-
-fit_interact2 <- data |>
-  filter(Country != "U2") |>
-  group_by(Country) |>
-  do({
-    model <- lm(int ~ Mnet_lag1 * Country + HICP + ST3M + LT10Y, data = data)
-    tidy(model) |>
-      mutate(r2 = glance(model)$r.squared)
-  })
-
-
-
-fit_interact2 <- lm(
-  int ~ Mnet_lag1 * Country + HICP + ST3M + LT10Y,
-  data = data
-)
-fit_interact2
-
-
-qe_country <- country_regs |>
-  filter(term == "Mnet_lag1") |>
-  dplyr::select(Country, estimate, std.error, p.value, r2)
-
-qe_country <- qe_country |>
-  mutate(Group = case_when(
-    Country %in% CORE ~ "Core",
-    Country %in% PERIPHERY ~ "Periphery",
-    Country %in% OTHER ~ "Other"
-  ))
-
-# Data frame of estimates, their pvalue, r2 per country
-qe_country <- qe_country |>
-  mutate(
-    signif = case_when(
-      p.value < 0.01 ~ "***",
-      p.value < 0.05 ~ "**",
-      p.value < 0.10 ~ "*",
-      TRUE ~ ""
-    )
-  )
-
-qe_country
-```
-
-
-```{r}
-qe_country <- country_regs |>
-  filter(term == "Mnet_lag1") |>
-  dplyr::select(Country, estimate, std.error, p.value, r2)
-
-qe_country <- qe_country |>
-  mutate(Group = case_when(
-    Country %in% CORE ~ "Core",
-    Country %in% PERIPHERY ~ "Periphery",
-    Country %in% OTHER ~ "Other"
-  ))
-
-# Data frame of estimates, their pvalue, r2 per country
-qe_country <- qe_country |>
-  mutate(
-    signif = case_when(
-      p.value < 0.01 ~ "***",
-      p.value < 0.05 ~ "**",
-      p.value < 0.10 ~ "*",
-      TRUE ~ ""
-    )
-  )
-
-qe_country
-```
-
-
-### estimation with ln, with fixed effect (to dos)
-
-### useful syntax
-
-```{r}
-#syntaxe utile sans résultats 
-qe_country <- country_regs |>
-  filter(term == "Mnet_lag1") |>
-  dplyr::select(Country, estimate, std.error, p.value, r2)
-
-qe_country <- qe_country |>
-  mutate(
-    signif = case_when(
-      p.value < 0.01 ~ "***",
-      p.value < 0.05 ~ "**",
-      p.value < 0.10 ~ "*",
-      TRUE ~ ""
-    )
-  )
-
-qe_country
-```
 
 
 
