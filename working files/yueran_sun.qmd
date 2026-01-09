@@ -47,7 +47,7 @@ names(QE_mnet)[6] <- paste("PSPP") #Public Sector purchase programme
 
 #All data starting from the 7th column describe quarterly adjustments and total holdings, which, for this project specifically, are useless, which is why we remove them. 
 QE_mnet <- QE_mnet|>
-  select(1:6)
+  dplyr::select(1:6)
 
 #In the original .csv, the year column is empty for all months except for the first month of each year, and there is no date column. Therefore, dates need to be manually added to facilitate later computation. 
 
@@ -67,7 +67,7 @@ QE_mnet <- QE_mnet |>
     last_day = days_in_month(date_first),
     DATE = paste0(Year,"/", Month_num, "/", last_day)
   ) |>
-  select(-Month_num, -date_first, -last_day)
+  dplyr::select(-Month_num, -date_first, -last_day)
 
 
 QE_mnet <- QE_mnet|>
@@ -115,7 +115,7 @@ names(corp_int)[23] <- paste("U2")
 corp_int <- corp_int|>
   mutate(DATE = as.Date(DATE, format = "%Y/%m/%d"))
 
-corp_int <- corp_int|>select(!`TIME PERIOD`)
+corp_int <- corp_int|>dplyr::select(!`TIME PERIOD`)
 
 
 #We pivot from long to wide, so that now we have observations in country-months
@@ -151,14 +151,14 @@ library(ggplot2)
 emu_avg_rates <- corp_int |>
   drop_na() |>
   filter(Country == "U2") |>
-  select(DATE, EMU_Avg = int)
+  dplyr::select(DATE, EMU_Avg = int)
 
 corp_int_deviation <- corp_int |>
   drop_na() |>
   filter(Country != "U2") |>
   left_join(emu_avg_rates, by = "DATE") |>
   mutate(Deviation = int - EMU_Avg) |>
-  select(-EMU_Avg)
+  dplyr::select(-EMU_Avg)
 
 corp_int_deviation|>
   ggplot(aes(x = DATE, y = Deviation, group = Country, color = Country)) +
@@ -203,10 +203,6 @@ library(plm)       # For Panel Data structures
 library(tidyverse) # For data cleaning
 library(stargazer) # For regression tables
 
-model_data <- data|>
-  select(Year, Month, DATE, Mnet, Country, int, HICP, ST3M, LT10Y)|>
-  mutate(int = int*100,#Convert interest rates to basis points
-         Mnet = Mnet/1000) #Convert quantitative easing amount from millions to billions
 
 core <- data|>filter(Group == "Core")
 p_core <- pdata.frame(core, index = c("Country", "DATE"))
@@ -299,15 +295,27 @@ final_coefficients|> filter(term == "Mnet", p.value < 0.05)
 library(vars)
 library(tseries)
 
-prep_country_var <- function(model_data, country) {
-  country_df <- model_data |>
-    filter(Country == country) |>
-    arrange(DATE) |>
-    # Select our key system variables
-    select(int, Mnet, HICP, LT10Y, ST3M) |>
-    # Convert to differences to ensure stationarity
-    mutate(across(everything(), ~ .x - lag(.x))) |>
-    drop_na()
+
+model_data <- data
+
+model_data <- model_data |>
+  dplyr::select(DATE, Mnet, Country, int, HICP, ST3M, LT10Y)|>
+  mutate(int = int*100,#Convert interest rates to basis points
+         Mnet = Mnet/1000) #Convert quantitative easing amount from millions to billions
+
+prep_country_var <- function(data, country_code) {
+  country_df <- data %>%
+    dplyr::filter(Country == country_code) %>%
+    dplyr::arrange(DATE) %>%
+    dplyr::select(int, Mnet, HICP, ST3M) %>%
+    dplyr::mutate(across(everything(), as.numeric)) %>%
+    # Calculate differences - this creates ONE row of NAs at the top
+    dplyr::mutate(across(everything(), ~ .x - dplyr::lag(.x))) %>%
+    # CRITICAL: Remove ALL rows containing any NA
+    tidyr::drop_na() 
+  
+  # Final check: if the dataframe is empty after dropping NAs, return NULL
+  if (nrow(country_df) < 5) return(NULL)
   
   return(as.ts(country_df))
 }
@@ -323,7 +331,7 @@ var_results <- list()
 
 for (ctry in countries) {
   # 1. Prepare time series
-  ts_data <- prep_country_var(df, ctry)
+  ts_data <- prep_country_var(model_data, ctry)
   
   # 2. Select optimal lags (usually based on AIC)
   lag_select <- VARselect(ts_data, lag.max = 6, type = "both")
@@ -338,4 +346,69 @@ for (ctry in countries) {
 }
 
 ```
+
+IRF for Italy 
+
+```{r}
+
+# 1. Check variance first (If any are 0, the VAR will fail)
+apply(prep_country_var(model_data, "IT"), 2, var)
+
+# 2. Re-run a "Restricted" VAR for Italy specifically to fix the math
+# We force p = 2 to ensure the matrix is stable
+ts_it <- prep_country_var(model_data, "IT")
+model_it_stable <- VAR(ts_it, p = 2, type = "const")
+
+# 3. Run the IRF with 'ortho = FALSE' 
+# This bypasses the Cholesky decomposition error if the correlations are the issue
+irf_it <- irf(model_it_stable, 
+              impulse = "Mnet", 
+              response = "int", 
+              n.ahead = 10, 
+              ortho = FALSE, # This is the key fix for the chol.default error
+              boot = TRUE)
+
+plot(irf_it, main = "Shock to QE: Impact on Italian Corporate Rates (Stable)")
+
+```
+
+IRF for Germany
+
+```{r}
+
+apply(prep_country_var(model_data, "DE"), 2, var)
+
+ts_de <- prep_country_var(model_data, "DE")
+model_de_stable <- VAR(ts_de, p = 2, type = "const")
+irf_de <- irf(model_de_stable, 
+              impulse = "Mnet", 
+              response = "int", 
+              n.ahead = 10, 
+              ortho = FALSE, 
+              boot = TRUE)
+
+plot(irf_de, main = "Shock to QE: Impact on German Corporate Rates (Stable)")
+
+```
+
+IRF for France
+
+```{r}
+
+apply(prep_country_var(model_data, "FR"), 2, var)
+
+ts_fr <- prep_country_var(model_data, "FR")
+model_de_stable <- VAR(ts_fr, p = 2, type = "const")
+irf_fr <- irf(model_de_stable, 
+              impulse = "Mnet", 
+              response = "int", 
+              n.ahead = 10, 
+              ortho = FALSE, 
+              boot = TRUE)
+
+plot(irf_fr, main = "Shock to QE: Impact on French Corporate Rates (Stable)")
+
+```
+
+
 

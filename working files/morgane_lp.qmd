@@ -35,7 +35,7 @@ library(stringr)
 
 -   Quantitative Easing data : We are using the csv file "APP_breakdown_history" (click on the link "History of cumulative purchase breakdowns under the APP") from the article dedicated to the Asset Purchase Programme (https://www.ecb.europa.eu/mopo/implement/app/html/index.en.html).
 
-For all other datasets of the ECB Data Portal, we browsed the series name through the the search engine, select the option "All MU countries (20)" in the "Geographical areas", "select all", and download as csv files that contains all countries times series.
+For all other datasets of the ECB Data Portal, we browsed the series name through the the search engine, dplyr::select the option "All MU countries (20)" in the "Geographical areas", "dplyr::select all", and download as csv files that contains all countries times series.
 
 -   Direct investment, net, transactions, Monthly (https://data.ecb.europa.eu/search-results?searchTerm=Direct%20investment%2C%20net%2C%20transactions%2C%20Monthly)
 
@@ -105,7 +105,7 @@ names(QE_mnet)[6] <- paste("PSPP") #Public Sector purchase programme
 
 #All data starting from the 7th column describe quarterly adjustments and total holdings, which, for this project specifically, are useless, which is why we remove them. 
 QE_mnet <- QE_mnet|>
-  select(1:6)
+  dplyr::select(1:6)
 
 #In the original .csv, the year column is empty for all months except for the first month of each year, and there is no date column. Therefore, dates need to be manually added to facilitate later computation. 
 
@@ -125,7 +125,7 @@ QE_mnet <- QE_mnet |>
     last_day = days_in_month(date_first),
     DATE = paste0(Year,"/", Month_num, "/", last_day)
   ) |>
-  select(-Month_num, -date_first, -last_day)
+  dplyr::select(-Month_num, -date_first, -last_day)
 
 
 QE_mnet <- QE_mnet|>
@@ -174,7 +174,7 @@ names(corp_int)[23] <- paste("U2")
 corp_int <- corp_int|>
   mutate(DATE = as.Date(DATE, format = "%Y/%m/%d"))
 
-corp_int <- corp_int|>select(!`TIME PERIOD`)
+corp_int <- corp_int|>dplyr::select(!`TIME PERIOD`)
 
 
 #We pivot from long to wide, so that now we have observations in country-months
@@ -210,14 +210,14 @@ library(ggplot2)
 emu_avg_rates <- corp_int |>
   drop_na() |>
   filter(Country == "U2") |>
-  select(DATE, EMU_Avg = int)
+  dplyr::select(DATE, EMU_Avg = int)
 
 corp_int_deviation <- corp_int |>
   drop_na() |>
   filter(Country != "U2") |>
   left_join(emu_avg_rates, by = "DATE") |>
   mutate(Deviation = int - EMU_Avg) |>
-  select(-EMU_Avg)
+  dplyr::select(-EMU_Avg)
 
 corp_int_deviation|>
   ggplot(aes(x = DATE, y = Deviation, group = Country, color = Country)) +
@@ -256,7 +256,7 @@ plot(pred) +
 
 ```{r}
 data1 <- inner_join(QE_mnet,corp_int,by=join_by(DATE)) |>
-  select(DATE,Country,Mnet,int)
+  dplyr::select(DATE,Country,Mnet,int)
 ```
 
 ## Data loading and cleaning : other variables
@@ -267,7 +267,7 @@ We start by loading the dataset from our data folder, and computing the original
 
 Two columns are for the date : `DATE` as a date,`TIME PERIOD` as a character. The others are the values for the twenty countries of the Euro Union. Each of these column corresponds to a full ECB series name, for example: `Financial account, Direct Investment, Net (BPS.M.N.IE.W1.S1.S1.T.N.FA.D.F5._Z.EUR._T._X.N.ALL)`. We rename each column by extracting the two letter country code from the series name, using the function ifelse.
 
-Next, we select all columns except `TIME PERIOD` (we will use `DATE` for joining). We also filter the observations from October 2014 to November 2025.
+Next, we dplyr::select all columns except `TIME PERIOD` (we will use `DATE` for joining). We also filter the observations from October 2014 to November 2025.
 
 Finally, we transform the dataset from wide format (months as rows, countries as columns) to long format (months and countries as rows), and left join to the full `data` dataset.
 
@@ -299,9 +299,9 @@ invest <- invest |>
     .
   ))
 
-# We select the variables and filter the date
+# We dplyr::select the variables and filter the date
 invest <- invest |>
-  select(!`TIME PERIOD`) |>
+  dplyr::select(!`TIME PERIOD`) |>
   filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
 
 # We pivot to long format
@@ -319,7 +319,7 @@ invest <- invest |>
 | Number of rows    | `r invest_init_row` | `r nrow(invest)`       |
 | Number of NAs     | `r invest_init_na`  | `r sum(is.na(invest))` |
 
-We decided to keep a complete dataset and select all the countries, resulting in a lot of missing values even after cleaning (AT, CY, IE, NL have no time series available). We will eventually delete these countries values for the analysis.
+We decided to keep a complete dataset and dplyr::select all the countries, resulting in a lot of missing values even after cleaning (AT, CY, IE, NL have no time series available). We will eventually delete these countries values for the analysis.
 
 We then join this dataset to the previous one.
 
@@ -348,9 +348,9 @@ HICP <- HICP |>
     .
   ))
 
-# We select and pivot to long format
+# We dplyr::select and pivot to long format
 HICP <- HICP |>
-  select(!`TIME PERIOD`) |>
+  dplyr::select(!`TIME PERIOD`) |>
   filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
 
 HICP <- HICP |>
@@ -390,7 +390,7 @@ ST3M_int_init_na <- sum(is.na(ST3M_int))
 colnames(ST3M_int) <- c("DATE","TIME PERIOD","ST3M")
 
 ST3M_int <- ST3M_int |>
-  select(DATE,ST3M) |>
+  dplyr::select(DATE,ST3M) |>
   filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
 
 # We load the short term interest rate of maturity 6 months, and compute the initial number of rows and columns
@@ -404,7 +404,7 @@ ST6M_int_init_na <- sum(is.na(ST6M_int))
 colnames(ST6M_int) <- c("DATE","TIME PERIOD","ST6M")
 
 ST6M_int <- ST6M_int |>
-  select(DATE,ST6M) |>
+  dplyr::select(DATE,ST6M) |>
   filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30"))
 
 data4 <- left_join(data3,ST3M_int,by="DATE")
@@ -452,10 +452,10 @@ LT10Y_int <- LT10Y_int |>
     .
   ))
 
-# We select and pivot to long format
+# We dplyr::select and pivot to long format
 LT10Y_int <- LT10Y_int |>
-  select(DATE, AT, BE, CY, DE, EE, ES, FI, FR, GR, HR, IE, IT, LT, LU, LV, MT, NL, PT, SI, SK, U2
-  ) |> # we don't select I9 
+  dplyr::select(DATE, AT, BE, CY, DE, EE, ES, FI, FR, GR, HR, IE, IT, LT, LU, LV, MT, NL, PT, SI, SK, U2
+  ) |> # we don't dplyr::select I9 
   filter(DATE >= as.Date("2014-10-01") & DATE <= as.Date("2025-11-30")) 
 
 LT10Y_int <- LT10Y_int |>
@@ -499,7 +499,7 @@ qe_nona_extended <- qe_nona |>
   arrange(DATE)
 
 CSPP_panel <- qe_nona_extended |>
-  select(DATE, CSPP) |>
+  dplyr::select(DATE, CSPP) |>
   group_by(DATE) |>
   summarise(CSPP = first(CSPP), .groups = "drop")
   # or: distinct(DATE, .keep_all = TRUE)
@@ -512,7 +512,7 @@ data <- data |>
 ```{r}
 #remove columns
 data <- data |>
-  select(-c(`Invest`))
+  dplyr::select(-c(`Invest`))
 ```
 
 ### Overall time series analysis 
@@ -631,7 +631,7 @@ country_regs <- data |>
 # Create df of coefficient per country, their pvalue, r2 
 qe_country <- country_regs |>
   filter(term == "Mnet_lag1") |>
-  select(Country, estimate, std.error, p.value, r2)
+  dplyr::select(Country, estimate, std.error, p.value, r2)
 
 qe_country <- qe_country |>
   mutate(Group = case_when(
@@ -700,7 +700,7 @@ fit_interact2
 
 qe_country <- country_regs |>
   filter(term == "Mnet_lag1") |>
-  select(Country, estimate, std.error, p.value, r2)
+  dplyr::select(Country, estimate, std.error, p.value, r2)
 
 qe_country <- qe_country |>
   mutate(Group = case_when(
@@ -727,7 +727,7 @@ qe_country
 ```{r}
 qe_country <- country_regs |>
   filter(term == "Mnet_lag1") |>
-  select(Country, estimate, std.error, p.value, r2)
+  dplyr::select(Country, estimate, std.error, p.value, r2)
 
 qe_country <- qe_country |>
   mutate(Group = case_when(
@@ -759,7 +759,7 @@ qe_country
 #syntaxe utile sans résultats 
 qe_country <- country_regs |>
   filter(term == "Mnet_lag1") |>
-  select(Country, estimate, std.error, p.value, r2)
+  dplyr::select(Country, estimate, std.error, p.value, r2)
 
 qe_country <- qe_country |>
   mutate(
