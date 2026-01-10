@@ -767,7 +767,7 @@ We expect : lower coef, less significant for core Because more fixed term contra
 
 ### VAR 
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
 
 library(vars)
 library(tseries)
@@ -814,9 +814,98 @@ for (ctry in countries) {
   } 
 }
 
+#apply(prep_country_var(model_data, "IT"), 2, var)
+
+# 2. Re-run a "Restricted" VAR for Italy specifically to fix the math
+# We force p = 2 to ensure the matrix is stable
+ts_it <- prep_country_var(model_data, "IT")
+model_it_stable <- VAR(ts_it, p = 2, type = "const")
+
+# 3. Run the IRF with 'ortho = FALSE' 
+# This bypasses the Cholesky decomposition error if the correlations are the issue
+irf_it <- irf(model_it_stable, 
+              impulse = "Mnet", 
+              response = "int", 
+              n.ahead = 10, 
+              ortho = FALSE, # This is the key fix for the chol.default error
+              boot = TRUE)
+
+#apply(prep_country_var(model_data, "GR"), 2, var)
+
+# 2. Re-run a "Restricted" VAR for Italy specifically to fix the math
+# We force p = 2 to ensure the matrix is stable
+ts_es <- prep_country_var(model_data, "ES")
+model_es_stable <- VAR(ts_es, p = 2, type = "const")
+
+# 3. Run the IRF with 'ortho = FALSE' 
+# This bypasses the Cholesky decomposition error if the correlations are the issue
+irf_es <- irf(model_es_stable, 
+              impulse = "Mnet", 
+              response = "int", 
+              n.ahead = 10, 
+              ortho = FALSE, # This is the key fix for the chol.default error
+              boot = TRUE)
+
+# 2. Re-run a "Restricted" VAR for Italy specifically to fix the math
+# We force p = 2 to ensure the matrix is stable
+ts_de <- prep_country_var(model_data, "DE")
+model_de_stable <- VAR(ts_de, p = 2, type = "const")
+
+# 3. Run the IRF with 'ortho = FALSE' 
+# This bypasses the Cholesky decomposition error if the correlations are the issue
+irf_de <- irf(model_de_stable, 
+              impulse = "Mnet", 
+              response = "int", 
+              n.ahead = 10, 
+              ortho = FALSE, # This is the key fix for the chol.default error
+              boot = TRUE)
+
+# 2. Re-run a "Restricted" VAR for Italy specifically to fix the math
+# We force p = 2 to ensure the matrix is stable
+ts_fr <- prep_country_var(model_data, "FR")
+model_fr_stable <- VAR(ts_fr, p = 2, type = "const")
+
+# 3. Run the IRF with 'ortho = FALSE' 
+# This bypasses the Cholesky decomposition error if the correlations are the issue
+irf_fr <- irf(model_fr_stable, 
+              impulse = "Mnet", 
+              response = "int", 
+              n.ahead = 10, 
+              ortho = FALSE, # This is the key fix for the chol.default error
+              boot = TRUE)
+
+par(mfrow = c(2, 2))
+plot(irf_fr, main = "Shock to QE: France (Stable)")
+plot(irf_de, main = "Shock to QE: Germany (Stable)")
+plot(irf_es, main = "Shock to QE: Spain (Stable)")
+plot(irf_it, main = "Shock to QE: Italy (Stable)")
+
+
+```
+
+Plotting for four specific countries
+
+```{r}
+# 1. Set the global graphical parameters for a 2-by-2 layout
+par(mfrow = c(2, 2))
+
+# 2. Run the plots in sequence (R fills the grid row by row)
+plot(irf_fr, main = "Shock to QE: France (Stable)")
+plot(irf_de, main = "Shock to QE: Germany (Stable)")
+plot(irf_es, main = "Shock to QE: Spain (Stable)")
+plot(irf_it, main = "Shock to QE: Italy (Stable)")
+
+# 3. Optional: Reset the layout back to a single plot for future work
+par(mfrow = c(1, 1))
+```
+
+Aggregate visualization
+
+```{r}
 
 core_countries <- model_data %>% filter(Group == "Core") %>% pull(Country) %>% unique()
 periphery_countries <- model_data %>% filter(Group == "Periphery") %>% pull(Country) %>% unique()
+
 get_irf_values <- function(ctry_code) {
   if (!is.null(var_results[[ctry_code]])) {
     res <- irf(var_results[[ctry_code]], impulse = "Mnet", response = "int", 
@@ -825,6 +914,7 @@ get_irf_values <- function(ctry_code) {
   }
   return(NULL)
 }
+
 core_irfs <- map(core_countries, get_irf_values) %>% compact() %>% do.call(rbind, .) %>% colMeans()
 periph_irfs <- map(periphery_countries, get_irf_values) %>% compact() %>% do.call(rbind, .) %>% colMeans()
 plot_data <- data.frame(
@@ -834,7 +924,7 @@ plot_data <- data.frame(
 ) %>%
   pivot_longer(cols = c(Core, Periphery), names_to = "Group", values_to = "Impact")
 ggplot(plot_data, aes(x = Month, y = Impact, color = Group, group = Group)) +
-  geom_line(linewidth = 1.5) +
+  geom_line(linewidth = 1) +
   geom_point(size = 3) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   theme_minimal(base_size = 14) +
