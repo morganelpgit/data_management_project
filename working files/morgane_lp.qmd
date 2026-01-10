@@ -1,11 +1,15 @@
 ---
 title: "Morgane"
+execute:
+  echo: false       
 format:
   wordcount-html: 
     wordcount-banner: true
 params:
   wordcount: |
     <strong>{{< words-sum body-note-ref >}} total words</strong>: {{< words-body >}} in the body • {{< words-ref >}} in the references • {{< words-note >}} in the notes
+    
+    
 ---
 
 ::: {.content-visible when-meta="wordcount-banner"}
@@ -481,6 +485,7 @@ We still observe many NAs because Estonia is included, and its data only start i
 
 ### Clustering with litterature 
 
+
 Large literature identifies core and peripheral countries in the EMU (to develop). Based on BERG WP (2024) we identify : 
 CORE = BE, FR, DE, LU, NL
 PERIPHERY = GR, IE, IT, PT, ES
@@ -655,14 +660,17 @@ See from the graph cost of borrowing is lower than EMU average for core countrie
 - simple scatterplot qe/int (can't really compare if we facet per group)
 
 ```{r}
-#| fig.height: 5
-#| fig.width: 8
+#| message: false
+#| warning: false
+#| fig-height: 5
+#| fig-width: 8
 
 data |>
   drop_na(Mnet, int) |>
   mutate(Group2 = ifelse(Country == "U2", "U2", Group)) |>
   ggplot(aes(x = Mnet, y = int, color = Group2)) +
   geom_point(alpha = 0.5,size=1.5) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +  # Droite MCO
   scale_color_manual(
     values = c(
       "Core" = "steelblue",
