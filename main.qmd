@@ -42,9 +42,9 @@ For all other datasets of the ECB Data Portal, we browsed the series name throug
 
 -   HICP - Overall index, Euro area, Monthly <https://data.ecb.europa.eu/search-results?searchTerm=HICP%20-%20Overall%20index%2C%20Euro%20area%2C%20Monthly>
 
--   Euribor 3-month - Historical close, average of observations through period, Euro area, Monthly [https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR3MD\\\_.HSTA](https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR3MD\_.HSTA){.uri}
+-   Euribor 3-month - Historical close, average of observations through period, Euro area, Monthly [https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR3MD\\\_.HSTA](https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR3MD_.HSTA){.uri}
 
--   Euribor 6-month - Historical close, average of observations through period, Euro area, Monthly [https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR6MD\\\_.HSTA](https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR6MD\_.HSTA){.uri}
+-   Euribor 6-month - Historical close, average of observations through period, Euro area, Monthly [https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR6MD\\\_.HSTA](https://data.ecb.europa.eu/data/datasets/FM/FM.M.U2.EUR.RT.MM.EURIBOR6MD_.HSTA){.uri}
 
 -   Long-term interest rate for convergence purposes – 10-year maturity – denominated in euro – Euro area 20 (fixed composition) <https://data.ecb.europa.eu/search-results?searchTerm=Long-term%20interest%20rate%20for%20convergence%20purposes%20%E2%80%93%2010-year%20maturity%20%E2%80%93%20denominated%20in%20euro>
 
@@ -501,7 +501,7 @@ desc_stats
 
 less interest rate for core countries
 
-### Visualisations : APP shares, ts of int, scatterplot
+## Visualisations : APP shares, ts of int, scatterplot
 
 -   selected countries need eurostat sf giscoR
 
@@ -604,6 +604,60 @@ data |>
 ```
 
 See from the graph cost of borrowing is lower than EMU average for core countries, and above average for periphery.
+
+-   Graphical representation of discrepancy between corporate interest rates in EU countries and the EU average
+
+```{r}
+
+#| message: false
+#| warning: false
+
+#Preliminary visusalization of varying differences between corporate borrowing rates of each country and the EMU average 
+
+emu_avg_rates <- corp_int |>
+  drop_na() |>
+  filter(Country == "U2") |>
+  dplyr::select(DATE, EMU_Avg = int)
+
+corp_int_deviation <- corp_int |>
+  drop_na() |>
+  filter(Country != "U2") |>
+  left_join(emu_avg_rates, by = "DATE") |>
+  mutate(Deviation = int - EMU_Avg) |>
+  dplyr::select(-EMU_Avg)
+
+corp_int_deviation|>
+  ggplot(aes(x = DATE, y = Deviation, group = Country, color = Country)) +
+  geom_line(alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  labs(
+    title = "Corporate Borrowing Rate Deviation from EMU Average",
+    x = "Month/Year",
+    y = "Deviation from EMU Average Rate (Percentage Points)"
+  ) +
+  theme_minimal()
+
+#Preliminary visualization of the cross-country differences between their relationships with QE amounts
+
+library(ggeffects)
+
+qe_int <- qe_int |>
+  arrange(Country, DATE)
+
+qe_int <- qe_int |>
+  group_by(Country) |>
+  mutate(Mnet_lag1 = lag(Mnet, 1)) |> 
+  ungroup()
+
+qe_nona <- drop_na(qe_int)
+
+fit = lm(formula = int ~Mnet_lag1*Country, data=qe_nona)
+pred = ggpredict(fit, terms = c("Mnet_lag1","Country"))
+plot(pred) +
+  scale_color_viridis_d(option = "turbo") +
+  ggtitle(NULL)
+
+```
 
 -   simple scatterplot qe/int (can't really compare if we facet per group)
 
@@ -709,60 +763,7 @@ mean(peri_tab$estimate)
 
 ```
 
-We expect : lower coef, less significant for core Because more fixed term contracts : interest rate vary less (cf litterature)
-
-### Graphical representation of target variable (Alyssa)
-
-```{r}
-#| message: false
-#| warning: false
-
-#Preliminary visusalization of varying differences between corporate borrowing rates of each country and the EMU average 
-
-emu_avg_rates <- corp_int |>
-  drop_na() |>
-  filter(Country == "U2") |>
-  dplyr::select(DATE, EMU_Avg = int)
-
-corp_int_deviation <- corp_int |>
-  drop_na() |>
-  filter(Country != "U2") |>
-  left_join(emu_avg_rates, by = "DATE") |>
-  mutate(Deviation = int - EMU_Avg) |>
-  dplyr::select(-EMU_Avg)
-
-corp_int_deviation|>
-  ggplot(aes(x = DATE, y = Deviation, group = Country, color = Country)) +
-  geom_line(alpha = 0.7) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
-  labs(
-    title = "Corporate Borrowing Rate Deviation from EMU Average",
-    x = "Month/Year",
-    y = "Deviation from EMU Average Rate (Percentage Points)"
-  ) +
-  theme_minimal()
-
-#Preliminary visualization of the cross-country differences between their relationships with QE amounts
-
-library(ggeffects)
-
-qe_int <- qe_int |>
-  arrange(Country, DATE)
-
-qe_int <- qe_int |>
-  group_by(Country) |>
-  mutate(Mnet_lag1 = lag(Mnet, 1)) |> 
-  ungroup()
-
-qe_nona <- drop_na(qe_int)
-
-fit = lm(formula = int ~Mnet_lag1*Country, data=qe_nona)
-pred = ggpredict(fit, terms = c("Mnet_lag1","Country"))
-plot(pred) +
-  scale_color_viridis_d(option = "turbo") +
-  ggtitle(NULL)
-
-```
+We expect : lower coef, less significant for core Because more fixed term contracts : interest rate vary less (cf litterature).
 
 ### var (regression yueran sun), IRF graphs
 
