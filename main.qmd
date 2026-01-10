@@ -767,22 +767,25 @@ We expect : lower coef, less significant for core Because more fixed term contra
 
 ### VAR 
 
-```{r}
+```{r, echo = FALSE}
 
 library(vars)
 library(tseries)
 
+#| message: false
+#| warning: false
+#| error: false
 
 model_data <- data
 
 model_data <- model_data |>
-  dplyr::select(DATE, Mnet, Country, int, HICP, ST3M, LT10Y)|>
+  dplyr::select(DATE, Mnet, Country, Group, int, HICP, ST3M, LT10Y)|>
   mutate(int = int*100,
          Mnet = Mnet/1000)
 
-prep_country_var <- function(data, country_code) {
+prep_country_var <- function(data, country) {
   country_df <- data %>%
-    dplyr::filter(Country == country_code) %>%
+    dplyr::filter(Country == country) %>%
     dplyr::arrange(DATE) %>%
     dplyr::select(int, Mnet, HICP, ST3M) %>%
     dplyr::mutate(across(everything(), as.numeric)) %>%
@@ -799,16 +802,47 @@ var_results <- list()
 
 for (ctry in countries) {
   ts_data <- prep_country_var(model_data, ctry)
-    lag_select <- VARselect(ts_data, lag.max = 6, type = "both")
-  opt_lag <- lag_select$selection["AIC(n)"]
-  
-  try({
-    model_var <- VAR(ts_data, p = opt_lag, type = "both")
-    var_results[[ctry]] <- model_var
-    print(paste("✓ VAR completed for", ctry))
-  }, silent = TRUE)
+  if (!is.null(ts_data) && nrow(ts_data) > 10) {
+    try({
+      lag_select <- vars::VARselect(ts_data, lag.max = 6, type = "both")
+      opt_lag <- lag_select$selection["AIC(n)"]
+      model_var <- vars::VAR(ts_data, p = opt_lag, type = "both")
+      var_results[[ctry]] <- model_var
+      })
+  } else {
+    message(paste("X Skipping", ctry, ": Insufficient data"))
+  } 
 }
 
+
+core_countries <- model_data %>% filter(Group == "Core") %>% pull(Country) %>% unique()
+periphery_countries <- model_data %>% filter(Group == "Periphery") %>% pull(Country) %>% unique()
+get_irf_values <- function(ctry_code) {
+  if (!is.null(var_results[[ctry_code]])) {
+    res <- irf(var_results[[ctry_code]], impulse = "Mnet", response = "int", 
+               n.ahead = 10, ortho = FALSE, boot = FALSE)
+    return(as.vector(res$irf$Mnet))
+  }
+  return(NULL)
+}
+core_irfs <- map(core_countries, get_irf_values) %>% compact() %>% do.call(rbind, .) %>% colMeans()
+periph_irfs <- map(periphery_countries, get_irf_values) %>% compact() %>% do.call(rbind, .) %>% colMeans()
+plot_data <- data.frame(
+  Month = 0:10,
+  Core = core_irfs,
+  Periphery = periph_irfs
+) %>%
+  pivot_longer(cols = c(Core, Periphery), names_to = "Group", values_to = "Impact")
+ggplot(plot_data, aes(x = Month, y = Impact, color = Group, group = Group)) +
+  geom_line(linewidth = 1.5) +
+  geom_point(size = 3) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  theme_minimal(base_size = 14) +
+  scale_color_manual(values = c("Core" = "#2c3e50", "Periphery" = "#e74c3c")) +
+  labs(title = "QE Transmission: Core vs. Periphery",
+       subtitle = "Aggregate Impulse Response of Corporate Rates to QE Shock",
+       x = "Months After Shock", 
+       y = "Response (Basis Points)")
 ```
 
 # Conclusion
