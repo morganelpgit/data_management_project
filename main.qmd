@@ -765,6 +765,50 @@ mean(peri_tab$estimate)
 
 We expect : lower coef, less significant for core Because more fixed term contracts : interest rate vary less (cf litterature).
 
-### var (regression yueran sun), IRF graphs
+### VAR 
+
+```{r}
+
+library(vars)
+library(tseries)
+
+
+model_data <- data
+
+model_data <- model_data |>
+  dplyr::select(DATE, Mnet, Country, int, HICP, ST3M, LT10Y)|>
+  mutate(int = int*100,
+         Mnet = Mnet/1000)
+
+prep_country_var <- function(data, country_code) {
+  country_df <- data %>%
+    dplyr::filter(Country == country_code) %>%
+    dplyr::arrange(DATE) %>%
+    dplyr::select(int, Mnet, HICP, ST3M) %>%
+    dplyr::mutate(across(everything(), as.numeric)) %>%
+    dplyr::mutate(across(everything(), ~ .x - dplyr::lag(.x))) %>%
+    tidyr::drop_na() 
+  
+  if (nrow(country_df) < 5) return(NULL)
+  
+  return(as.ts(country_df))
+}
+
+countries <- unique(model_data$Country)
+var_results <- list()
+
+for (ctry in countries) {
+  ts_data <- prep_country_var(model_data, ctry)
+    lag_select <- VARselect(ts_data, lag.max = 6, type = "both")
+  opt_lag <- lag_select$selection["AIC(n)"]
+  
+  try({
+    model_var <- VAR(ts_data, p = opt_lag, type = "both")
+    var_results[[ctry]] <- model_var
+    print(paste("✓ VAR completed for", ctry))
+  }, silent = TRUE)
+}
+
+```
 
 # Conclusion
