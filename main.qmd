@@ -174,7 +174,6 @@ QE_mnet <- QE_mnet|>
 | Number of rows    | `r QE_init_row` | `r nrow(QE_mnet)`       |
 | Number of NAs     | `r QE_init_na`  | `r sum(is.na(QE_mnet))` |
 
-
 Each data file downloaded from the ECB Data Portal is loaded and cleaned as follows:
 
 We start by loading the dataset from our data folder, and computing the original number of rows and columns. We use the function spec() with the col_types() argument to preserve the date format for `DATE`, and the numeric type for variables that are incorrectly recognized as logical.
@@ -463,7 +462,7 @@ data <- left_join(data4, LT10Y_int, by = join_by(DATE, Country))
 
 We still observe many NAs because Estonia is included, and its data only start in 2020.
 
-Before the analysis, we add a lag for the asset purchase amounts. 
+Before the analysis, we add a lag for the asset purchase amounts.
 
 ```{r}
 data <- data |>
@@ -471,24 +470,23 @@ data <- data |>
   mutate(Mnet_lag1 = lag(Mnet, 1)) 
 ```
 
-
-# Analysis 
+# Analysis
 
 We proceed with the empirical analysis as follows. First, we classify the countries of the monetary union into groups of core and periphery countries in line with the existing literature. Second, we visualize the evolution of the cost of borrowing at the national level and conduct a cross-country analysis to identify common patterns and divergences in the borrowing conditions. Finally, we estimate econometric models to assess whether there exists a significant relationship between asset purchases and the cost of borrowing, and if there is a difference in the coefficient between core and periphery. We also conduct a time series analysis with help of an ARMA model and impulse response functions.
-
 
 ## Framework and visualisations
 
 ### Core and periphery countries, a distinction from litterature
 
-The identification of core and periphery countries is a crucial step in our analysis. The development of the Optimum Currency Area (OCA) theory in the 1960s suggest that core countries are considered better suited to a monetary union due to greater economic convergence. Following the creation of EMU, Bayoumi and Eichengreen (1993) identify core countries as those exhibiting a higher degree of synchronization in demand and supply shocks and update the classification^[Nauro F. Campos, Corrado Macchiarelli, Core and Periphery in the European Monetary Union: Bayoumi and Eichengreen 25 years later, Economics Letters, LSE,
-Volume 147, 2016
-] .
+The identification of core and periphery countries is a crucial step in our analysis. The development of the Optimum Currency Area (OCA) theory in the 1960s suggest that core countries are considered better suited to a monetary union due to greater economic convergence. Following the creation of EMU, Bayoumi and Eichengreen (1993) identify core countries as those exhibiting a higher degree of synchronization in demand and supply shocks and update the classification[^1] .
 
-In this study, we adopt the distinction proposed by Wächter et al. (2024)^[Wächter, Maybrit; Proano, Christian; Peña, Juan Carlos : How fitting is "one-size-fits-all"? Revisiting the dynamic effects of ECB's interest policy on euro area countries, BERG Working Paper Series, No. 199, 2024
-]. Their paper identifies 10 euro area countries as belonging to either core or periphery groups based on countries Taylor Rate Gaps (TRGAPs), defined as the deviation of the country-specific Taylor, or ideal, interest rate from the ECB policy rate.
-Therefore, the six core countries are Belgium, France, Germany, Luxembourg, the Netherlands, and Denmark (Denmark is excluded from the analysis as it is not part of the EMU). The group of periphery countries consists of Greece, Ireland, Italy, Portugal, and Spain. 
-We then construct country vectors and include a qualitative group variable (“Core,” “Periphery,” “Other”) in the dataset. We illustrate this distinction using a map of Europe generated with the eurostat package, where core countries are highlighted in blue and periphery countries in red^[<https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>].
+[^1]: Nauro F. Campos, Corrado Macchiarelli, Core and Periphery in the European Monetary Union: Bayoumi and Eichengreen 25 years later, Economics Letters, LSE, Volume 147, 2016
+
+In this study, we adopt the distinction proposed by Wächter et al. (2024)[^2]. Their paper identifies 10 euro area countries as belonging to either core or periphery groups based on countries Taylor Rate Gaps (TRGAPs), defined as the deviation of the country-specific Taylor, or ideal, interest rate from the ECB policy rate. Therefore, the six core countries are Belgium, France, Germany, Luxembourg, the Netherlands, and Denmark (Denmark is excluded from the analysis as it is not part of the EMU). The group of periphery countries consists of Greece, Ireland, Italy, Portugal, and Spain. We then construct country vectors and include a qualitative group variable (“Core,” “Periphery,” “Other”) in the dataset. We illustrate this distinction using a map of Europe generated with the eurostat package, where core countries are highlighted in blue and periphery countries in red[^3].
+
+[^2]: Wächter, Maybrit; Proano, Christian; Peña, Juan Carlos : How fitting is "one-size-fits-all"? Revisiting the dynamic effects of ECB's interest policy on euro area countries, BERG Working Paper Series, No. 199, 2024
+
+[^3]: <https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>
 
 ```{r, echo = FALSE}
 #| message: false
@@ -507,7 +505,7 @@ data <- data |>
 dataU2 <- data |> filter(Country=="U2")
 ```
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, eval = FALSE}
 SHP_0 <- get_eurostat_geospatial(
   resolution = 10,
   nuts_level = 0,
@@ -561,10 +559,10 @@ ggplot(QE_long, aes(x = DATE, y = Value, fill = Programme)) +
   scale_fill_viridis_d()
 
 ```
+
 The Asset Purchase Programme was initiated in mid 2014 to support the ECB's 2% objective after the sovereign debt crisis of 2010. Overall, net purchases continued until 2019. In 2020, the Covid-19 pandemic encouraged the ECB to maintain large-scale asset purchase, with an additional envelope of €120 billion. Net purchases ended in July 2022 and assets were sold ("quantitative tightening"), with a reduction of approximately €15 billion per month between March and June 2023.
 
 Regarding the different programmes of the APP, the ECB first expanded two existing programmes, the ABSPP (Asset-backed Securities Purchase Programme) and the CBPP3 (Covered Bond Purchase Programme 3). In March 2015, the ECB introduced the PSPP (Public Sector Purchase Programme), which involved large-scale purchases of government and other public sector bonds. As we can see with the yellow bars, this component quickly became the dominant programme of the APP, peaking in May 2016 at approximately €79,673 million. When the trend reversed, the PSPP also accounted for the largest share of net asset sales. The CSPP (Corporate Sector Purchase Programme), launched in June 2016, also became an important part to total APP purchases.
-
 
 ### Cost of borrowing : trends and differences
 
@@ -591,10 +589,9 @@ desc_stats <- data |>
 desc_stats
 ```
 
-The descriptive statistics show heterogeneity in corporate borrowing costs across country groups. Core countries have a a lower mean and median interest rates, of 2.23% and 1.61% respectfully. In contrast, both periphery and other countries face higher borrowing costs, 3.29% and 3.31% in average. In addition, borrowing rates in periphery countries show greater dispersion, with slightly larger standard deviations. 
+The descriptive statistics show heterogeneity in corporate borrowing costs across country groups. Core countries have a a lower mean and median interest rates, of 2.23% and 1.61% respectfully. In contrast, both periphery and other countries face higher borrowing costs, 3.29% and 3.31% in average. In addition, borrowing rates in periphery countries show greater dispersion, with slightly larger standard deviations.
 
-These results are consistent with our predictions. They suggest that firms in core countries benefit from lower interest rates than firms in periphery, despite a common monetary policy.
-However, they question the relevance of the classification of periphery countries, as they do not differ clearly from the unlabeled ones (they even show a lower average cost).
+These results are consistent with our predictions. They suggest that firms in core countries benefit from lower interest rates than firms in periphery, despite a common monetary policy. However, they question the relevance of the classification of periphery countries, as they do not differ clearly from the unlabeled ones (they even show a lower average cost).
 
 ```{r, echo = FALSE}
 #| message: false
@@ -656,8 +653,7 @@ data |>
 
 First, let us look at the aggregate level. The black line shows the corporate interest rate over time. It shows a continuous decline from 2.59% in October 2014 to 1.36% in December 2021. Following quantitative tightening in 2022, financing costs increased sharply, reaching a peak of 5.28% in October 2023, before declining.
 
-We then compare the two country groups. For core countries, borrowing costs are generally close to, or slightly below, the EMU average. By contrast, periphery countries exhibit higher borrowing costs, in particular Greece, Ireland, and Portugal prior to tighter policy in 2022.
-However, Italy, Spain, Belgium, and Germany do not notably differ from the EMU average.
+We then compare the two country groups. For core countries, borrowing costs are generally close to, or slightly below, the EMU average. By contrast, periphery countries exhibit higher borrowing costs, in particular Greece, Ireland, and Portugal prior to tighter policy in 2022. However, Italy, Spain, Belgium, and Germany do not notably differ from the EMU average.
 
 -   simple scatterplot qe/int (can't really compare if we facet per group)
 
@@ -696,10 +692,9 @@ maybe add the Alyssa's visu of coefficients from phase 2 ?
 
 ## Models
 
-### Causal inference analysis 
+### Causal inference analysis
 
-We aim to estimate the effect of QE on the corporate cost of borrowing.
-To identify the most appropriate specification, we conduct regressions using QE shocks and their lagged values at the aggregate level. 
+We aim to estimate the effect of QE on the corporate cost of borrowing. To identify the most appropriate specification, we conduct regressions using QE shocks and their lagged values at the aggregate level.
 
 ```{r}
 #| echo: false
@@ -787,14 +782,13 @@ knitr::kable(
 )
 ```
 
-The model with a three-month lag minimizes both the AIC and BIC criteria. Therefore we start with a very simple model : 
-$$\text{Cost of borrowing}_t = \beta_0 + \beta_1  \text{Monthly QE}_{t-3} + \epsilon_t $$
-A more accurate dynamic regression is made in the next section using a VAR framework.
+The model with a three-month lag minimizes both the AIC and BIC criteria. Therefore we start with a very simple model : $$\text{Cost of borrowing}_t = \beta_0 + \beta_1  \text{Monthly QE}_{t-3} + \epsilon_t $$ A more accurate dynamic regression is made in the next section using a VAR framework.
 
-Taking into account the nature of panel data and for simplicity, we make regressions on time series per country of the selected groups, and asses whether there is a difference between the coefficients.  
+Taking into account the nature of panel data and for simplicity, we make regressions on time series per country of the selected groups, and asses whether there is a difference between the coefficients.
 
-There exists a large literature arguing that the ECB’s “one-size-fits-all” quantitative easing policy had differentiated effect on economic variables across countries. In particular, we expect the coefficients capturing the effects of QE to be lower and less statistically significant for core countries than for periphery countries. In fact, average cost of borrowing rises less quickly in euro area countries where debt is contracted at a fixed rate and a long maturity, as is the case in France or other core countries (Gueuder and Ray (2023)^[Debt structure and rising interest rates: focus on European companies, Maxime Gueuder, Sébastien Ray, Banque de France, 2024]. 
+There exists a large literature arguing that the ECB’s “one-size-fits-all” quantitative easing policy had differentiated effect on economic variables across countries. In particular, we expect the coefficients capturing the effects of QE to be lower and less statistically significant for core countries than for periphery countries. In fact, average cost of borrowing rises less quickly in euro area countries where debt is contracted at a fixed rate and a long maturity, as is the case in France or other core countries (Gueuder and Ray (2023)[^4].
 
+[^4]: Debt structure and rising interest rates: focus on European companies, Maxime Gueuder, Sébastien Ray, Banque de France, 2024
 
 ```{r}
 #| echo: false
@@ -850,11 +844,9 @@ peri_tab|>
   knitr::kable(digits=10)
 ```
 
-However, we find no evidence of such a difference, with an average of $\beta_1$ = `r mean(core_tab$estimate)` for core countries and $\beta_1$ = `r mean(peri_tab$estimate)` for peripheral countries, despite a 5% significance of QE for all models. We also note that coefficients are very small, and the R2 is only of 3% for the case of Greece. 
+However, we find no evidence of such a difference, with an average of $\beta_1$ = `r mean(core_tab$estimate)` for core countries and $\beta_1$ = `r mean(peri_tab$estimate)` for peripheral countries, despite a 5% significance of QE for all models. We also note that coefficients are very small, and the R2 is only of 3% for the case of Greece.
 
-Let us see whether adding control variables improves the robustness of the model. These controls include the price index, short-term interest rates, and long-term interest rates.
-$$\text{Cost of borrowing}_t = \beta_0 + \beta_1   \text{Monthly QE}_{t-3} + \beta_2 \text{HICP}_t + \beta_3 \text{3M rate}_t + \beta_3 \text{10Y rate}_t  \epsilon_t $$
-We take into account the sign of $\beta_1$, which is expected to be negative, its significance and the R2 of the model.
+Let us see whether adding control variables improves the robustness of the model. These controls include the price index, short-term interest rates, and long-term interest rates. $$\text{Cost of borrowing}_t = \beta_0 + \beta_1   \text{Monthly QE}_{t-3} + \beta_2 \text{HICP}_t + \beta_3 \text{3M rate}_t + \beta_3 \text{10Y rate}_t  \epsilon_t $$ We take into account the sign of $\beta_1$, which is expected to be negative, its significance and the R2 of the model.
 
 ```{r}
 #| echo: false
@@ -906,8 +898,7 @@ peri_tab|>
   knitr::kable(digits=10)
 ```
 
-Despite a higher R2, this model is not much more convincing as most estimates of $\beta_1$ become positive and less significant. 
-Several factors may explain this result. First, the absence of lagged variables may lead to misspecification. In addition, the inclusion of the price index may introduce endogeneity with respect to QE, as central banks calibrate asset purchases in response to inflation.
+Despite a higher R2, this model is not much more convincing as most estimates of $\beta_1$ become positive and less significant. Several factors may explain this result. First, the absence of lagged variables may lead to misspecification. In addition, the inclusion of the price index may introduce endogeneity with respect to QE, as central banks calibrate asset purchases in response to inflation.
 
 ### VAR Analysis
 
@@ -917,11 +908,15 @@ Therefore, in this part, we will to examine the the dynamic reactions of interes
 
 The general form of a VAR is as follows:
 
-Y_t = c + \Phi\*1 Y*{t-1} +* \Phi\*2 Y{t-2} + \dots + \Phi\*p Y\*{t-p} + \epsilon\_t
+$$
+Y_t = c + \Phi^1Y_{t-1}+\Phi^2Y_{t-2}+\dots+{\Phi}^pY_{t-p}+\epsilon_t
+$$
 
 The Impulse Response Function is defined as the reaction of Y towards a one-unit shock in the structural error term, its formula is:
 
-\text{IRF}(s) = \frac{\partial y_{t+s}}{\partial \epsilon_{t}} = \Psi\_s
+$$
+IRF(s) = \frac{\partial y_{t+s}}{\partial \epsilon_t} = \Psi_s
+$$
 
 In our scenario, the IRF would reflect the response of corporate interest rates towards a structural shock in quantitative easing policy.
 
