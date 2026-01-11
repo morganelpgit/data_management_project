@@ -24,11 +24,9 @@ Therefore, we propose the following research question:
 
 **How does quantitative easing by the ECB affect corporate borrowing costs in the eurozone (the European Monetary Union), and how different is this impact across different members of the EMU?**
 
-**We will also attempt to observe whether this difference correlated with factors such as domestic economic development and inflation.**
-
 This is a two-part inquiry that investigates both the transmission of unconventional monetary policy and the asymmetry of this transmission. The goal is to move beyond the study of the eurozone as a monolith, to examine its fragmentation, and how that fragmentation complicates decisions made by a central, unifying authority like the ECB.
 
-To limit our research only to countries directly regulated by the European Central Bank, we have selected data only from the EMU. Sourcing data from publicly accessible websites such as the OECD and the ECB Data Portal, we will first run a regression analysis of corporate borrowing costs in the EMU against monthly asset purchases by the ECB (incorporating lags and proxies/instruments to represent generale economic policy tightness/looseness) to establish a benchmark coefficient for the EMU. Then, we will estimate country-specific coefficients and conduct cluster analysis (e.g. using KNN analysis) to determine which countries display the most similar coefficients, and highlight the economic features that define countries in the same cluster.
+To limit our research only to countries directly regulated by the European Central Bank, we have selected data only from the EMU. Sourcing data from publicly accessible websites such as the OECD and the ECB Data Portal, we will plan on running a regression analysis of corporate borrowing costs in the EMU against monthly asset purchases by the ECB (incorporating lags and proxies/instruments to represent general economic policy tightness/looseness) to establish a benchmark coefficient for the EMU.
 
 ## Link to the sources
 
@@ -486,17 +484,17 @@ In this study, we adopt the distinction proposed by Wächter et al. (2024)[^2]. 
 
 [^3]: <https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>
 
-The identification of core and periphery countries is a crucial step in our analysis. The development of the Optimum Currency Area (OCA) theory in the 1960s suggest that core countries are considered better suited to a monetary union due to greater economic convergence. Following the creation of EMU, Bayoumi and Eichengreen (1993) identify core countries as those exhibiting a higher degree of synchronization in demand and supply shocks and update the classification^[Nauro F. Campos, Corrado Macchiarelli, Core and Periphery in the European Monetary Union: Bayoumi and Eichengreen 25 years later, Economics Letters, LSE,
-Volume 147, 2016
-] .
+The identification of core and periphery countries is a crucial step in our analysis. The development of the Optimum Currency Area (OCA) theory in the 1960s suggest that core countries are considered better suited to a monetary union due to greater economic convergence. Following the creation of EMU, Bayoumi and Eichengreen (1993) identify core countries as those exhibiting a higher degree of synchronization in demand and supply shocks and update the classification[^4] .
 
-In this study, we adopt the distinction proposed by Wächter et al. (2024)^[Wächter, Maybrit; Proano, Christian; Peña, Juan Carlos : How fitting is "one-size-fits-all"? Revisiting the dynamic effects of ECB's interest policy on euro area countries, BERG Working Paper Series, No. 199, 2024
-]. Their paper identifies 10 euro area countries as belonging to either core or periphery groups based on countries Taylor Rate Gaps (TRGAPs), defined as the deviation of the country-specific Taylor, or ideal, interest rate from the ECB policy rate.
-Therefore, the six core countries are Belgium, France, Germany, Luxembourg, the Netherlands, and Denmark (Denmark is excluded from the analysis as it is not part of the EMU). The group of periphery countries consists of Greece, Ireland, Italy, Portugal, and Spain. 
+[^4]: Nauro F. Campos, Corrado Macchiarelli, Core and Periphery in the European Monetary Union: Bayoumi and Eichengreen 25 years later, Economics Letters, LSE, Volume 147, 2016
 
-We then construct country vectors and include a qualitative group variable (“Core,” “Periphery,” “Other”) in the dataset. We illustrate this distinction using a map of Europe generated with the eurostat package, where core countries are highlighted in blue and periphery countries in red^[<https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>].
-(Note that the latest version of R is required to visualise the map.)
->>>>>>> 003119b5408dd177550f924a93c91a3d47c4c5c1
+In this study, we adopt the distinction proposed by Wächter et al. (2024)[^5]. Their paper identifies 10 euro area countries as belonging to either core or periphery groups based on countries Taylor Rate Gaps (TRGAPs), defined as the deviation of the country-specific Taylor, or ideal, interest rate from the ECB policy rate. Therefore, the six core countries are Belgium, France, Germany, Luxembourg, the Netherlands, and Denmark (Denmark is excluded from the analysis as it is not part of the EMU). The group of periphery countries consists of Greece, Ireland, Italy, Portugal, and Spain.
+
+[^5]: Wächter, Maybrit; Proano, Christian; Peña, Juan Carlos : How fitting is "one-size-fits-all"? Revisiting the dynamic effects of ECB's interest policy on euro area countries, BERG Working Paper Series, No. 199, 2024
+
+We then construct country vectors and include a qualitative group variable (“Core,” “Periphery,” “Other”) in the dataset. We illustrate this distinction using a map of Europe generated with the eurostat package, where core countries are highlighted in blue and periphery countries in red[^6]. (Note that the latest version of R is required to visualise the map.) \>\>\>\>\>\>\> 003119b5408dd177550f924a93c91a3d47c4c5c1
+
+[^6]: <https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>
 
 ```{r, echo = FALSE}
 #| message: false
@@ -609,7 +607,7 @@ desc_stats <- data |>
 desc_stats
 ```
 
-The descriptive statistics show heterogeneity in corporate borrowing costs across country groups. Core countries have lower mean and median interest rates, 2.23% and 1.61% respectfully. In contrast, both periphery and other countries face higher borrowing costs, 3.29% and 3.31% in average. In addition, borrowing rates in periphery countries show greater dispersion, with slightly larger standard deviations. 
+The descriptive statistics show heterogeneity in corporate borrowing costs across country groups. Core countries have lower mean and median interest rates, 2.23% and 1.61% respectfully. In contrast, both periphery and other countries face higher borrowing costs, 3.29% and 3.31% in average. In addition, borrowing rates in periphery countries show greater dispersion, with slightly larger standard deviations.
 
 These results are consistent with our predictions. They suggest that firms in core countries benefit from lower interest rates than firms in periphery, despite a common monetary policy. However, they question the relevance of the classification of periphery countries, as they do not differ clearly from the unlabeled ones (they even show a lower average cost).
 
@@ -808,9 +806,9 @@ The model with a three-month lag minimizes both the AIC and BIC criteria. Theref
 
 Taking into account the nature of panel data and for simplicity, we make regressions on time series per country of the selected groups, and asses whether there is a difference between the coefficients.
 
-There exists a large literature arguing that the ECB’s “one-size-fits-all” quantitative easing policy had differentiated effect on economic variables across countries. In particular, we expect the coefficients capturing the effects of QE to be lower and less statistically significant for core countries than for periphery countries. In fact, average cost of borrowing rises less quickly in euro area countries where debt is contracted at a fixed rate and a long maturity, as is the case in France or other core countries (Gueuder and Ray (2023)[^4].
+There exists a large literature arguing that the ECB’s “one-size-fits-all” quantitative easing policy had differentiated effect on economic variables across countries. In particular, we expect the coefficients capturing the effects of QE to be lower and less statistically significant for core countries than for periphery countries. In fact, average cost of borrowing rises less quickly in euro area countries where debt is contracted at a fixed rate and a long maturity, as is the case in France or other core countries (Gueuder and Ray (2023)[^7].
 
-[^4]: Debt structure and rising interest rates: focus on European companies, Maxime Gueuder, Sébastien Ray, Banque de France, 2024
+[^7]: Debt structure and rising interest rates: focus on European companies, Maxime Gueuder, Sébastien Ray, Banque de France, 2024
 
 ```{r}
 #| echo: false
