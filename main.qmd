@@ -455,11 +455,33 @@ data <- left_join(data4, LT10Y_int, by = join_by(DATE, Country))
 
 We still observe many NAs because Estonia is included, and its data only start in 2020.
 
+Before the analysis, we add a lag for the asset purchase amounts. 
+
+```{r}
+data <- data |>
+  dplyr::select(-`Invest`) |> #Invest will not be used for the rest of the analysis
+  mutate(Mnet_lag1 = lag(Mnet, 1)) 
+```
+
+
+# Analysis 
+
+We proceed with the empirical analysis as follows. First, we classify the countries of the monetary union into groups of core and periphery countries in line with the existing literature. Second, we visualize the evolution of the cost of borrowing at the national level and conduct a cross-country analysis to identify common patterns and divergences in the borrowing conditions. Finally, we estimate econometric models to assess whether there exists a significant relationship between asset purchases and the cost of borrowing, and if there is a difference in the coefficient between core and periphery. We also conduct a time series analysis with help of an ARMA model and impulse response functions.
+
+There exists a large litterature arguing that the ECB’s “one-size-fits-all” quantitative easing policy had differentiated effect on economic variables accross countries. In particular, we expect the coefficients capturing the effects of QE to be lower and less statistically significant for core countries than for periphery countries. In fact, average cost of borrowing rises less quickly in euro area countries where debt is contracted at a fixed rate and a long maturity, as is the case in France or other core countries (Gueuder and Ray (2023)^[Debt structure and rising interest rates: focus on European companies, Maxime Gueuder, Sébastien Ray, Banque de France, 2024]. 
+
 ## Clustering choice (ref to litterature), code dans data, map
 
 ### Clustering with litterature
 
-Large literature identifies core and peripheral countries in the EMU (to develop). Based on BERG WP (2024) we identify : CORE = BE, FR, DE, LU, NL PERIPHERY = GR, IE, IT, PT, ES
+Thus, the identification of core and periphery countries is a crucial step in our analysis. The development of the Optimum Currency Area (OCA) theory in the 1960s suggest that core countries are considered better suited to a monetary union due to greater economic convergence. Following the creation of EMU, Bayoumi and Eichengreen (1993) identify core countries as those exhibiting a higher degree of synchronization in demand and supply shocks and update the classification^[Nauro F. Campos, Corrado Macchiarelli, Core and Periphery in the European Monetary Union: Bayoumi and Eichengreen 25 years later, Economics Letters, LSE,
+Volume 147, 2016
+] .
+
+In this study, we adopt the distinction proposed by Wächter et al. (2024)^[Wächter, Maybrit; Proano, Christian; Peña, Juan Carlos : How fitting is "one-size-fits-all"? Revisiting the dynamic effects of ECB's interest policy on euro area countries, BERG Working Paper Series, No. 199, 2024
+]. Their paper identifies 10 euro area countries as belonging to either core or periphery groups based on countries Taylor Rate Gaps (TRGAPs), defined as the deviation of the country-specific Taylor, or ideal, interest rate from the ECB policy rate.
+Therefore, the six core countries are Belgium, France, Germany, Luxembourg, the Netherlands, and Denmark (Denmark is excluded from the analysis as it is not part of the EMU). The group of periphery countries consists of Greece, Ireland, Italy, Portugal, and Spain. 
+We then construct country vectors and include a qualitative group variable (“Core,” “Periphery,” “Other”) in the dataset. We illustrate this distinction using a map generated with the eurostat package, where core countries are highlighted in blue and periphery countries in red^[<https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>].
 
 ```{r, echo = FALSE}
 #| message: false
@@ -469,8 +491,6 @@ PERIPHERY <- c("GR", "IE", "IT", "PT", "ES")
 OTHER <- c("AT","CY", "EE", "FI", "HR", "LT", "LV", "MT", "SI", "SK")
 
 data <- data |>
-  dplyr::select(-c(`Invest`)) |>
-  mutate(Mnet_lag1 = lag(Mnet, 1)) |> 
   mutate(Group = case_when(
     Country %in% CORE ~ "Core",
     Country %in% PERIPHERY ~ "Periphery",
@@ -478,40 +498,16 @@ data <- data |>
   ))
 ```
 
-```{r, echo = FALSE}
-#| message: false
-#| warning: false
-
-library(dplyr)
-
-desc_stats <- data |>
-  filter(DATE >= as.Date("2014-10-01")) |>
-  group_by(Group) |>
-  summarise(
-    n_obs   = n(),
-    mean    = mean(int, na.rm = TRUE),
-    median  = median(int, na.rm = TRUE),
-    sd      = sd(int, na.rm = TRUE),
-    min     = min(int, na.rm = TRUE),
-    max     = max(int, na.rm = TRUE)
-  )
-
-desc_stats
-```
-
-less interest rate for core countries
 
 ## Visualisations : APP shares, ts of int, scatterplot
 
--   selected countries need eurostat sf giscoR
-
-Thanks to the package : <https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe> Put colors on selected countries
 
 ```{r, echo = FALSE}
 #| message: false
 #| warning: false
 
 ```
+
 
 -   share of the APP per type (CSPP etc) over time.
 
@@ -541,7 +537,28 @@ ggplot(QE_long, aes(x = DATE, y = Value, fill = Programme)) +
 
 comments see <https://www.ecb.europa.eu/mopo/implement/app/html/index.en.html>
 
--   carte de l'europe pour clusters, litterature
+
+```{r, echo = FALSE}
+#| message: false
+#| warning: false
+
+library(dplyr)
+
+desc_stats <- data |>
+  filter(DATE >= as.Date("2014-10-01")) |>
+  group_by(Group) |>
+  summarise(
+    n_obs   = n(),
+    mean    = mean(int, na.rm = TRUE),
+    median  = median(int, na.rm = TRUE),
+    sd      = sd(int, na.rm = TRUE),
+    min     = min(int, na.rm = TRUE),
+    max     = max(int, na.rm = TRUE)
+  )
+
+desc_stats
+```
+Summary statistic indicates that less interest rate for core countries. 
 
 -   time series analysis of int, trend cluster per country (history) facet wrap.
 
