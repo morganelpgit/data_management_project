@@ -60,7 +60,7 @@ The ECB Data Portal <https://data.ecb.europa.eu/> is the European Central Bank's
 
 ### Other variables
 
--   Direct investment, net, transactions, Euro Area 20, Monthly (Source: ECB Data Portal): Net inflows and outflows of direct investment for each country. This variable helps to assess whether quantitative easing have caused capital flight between core and peripheral Euro area countries.
+-   Direct investment, net, transactions, Euro Area 20, Monthly (Source: ECB Data Portal): Net inflows and outflows of direct investment for each country. This variable helps to assess the magnitude of capital movement.
 
 -   Harmonised Index of Consumer Prices (HICP) (Source: ECB data portal). We will use this variable to compute the real inflation rate for each country.
 
@@ -477,17 +477,17 @@ We proceed with the empirical analysis as follows. First, we classify the countr
 
 ### Core and periphery countries, a distinction from literature
 
-The identification of core and periphery countries is a crucial step in our analysis. The development of the Optimum Currency Area (OCA) theory in the 1960s suggest that core countries are considered better suited to a monetary union due to greater economic convergence. Following the creation of EMU, Bayoumi and Eichengreen (1993) identify core countries as those exhibiting a higher degree of synchronization in demand and supply shocks and update the classification^[Nauro F. Campos, Corrado Macchiarelli, Core and Periphery in the European Monetary Union: Bayoumi and Eichengreen 25 years later, Economics Letters, LSE,
-Volume 147, 2016
-] .
+The identification of core and periphery countries is a crucial step in our analysis. The development of the Optimum Currency Area (OCA) theory in the 1960s suggest that core countries are considered better suited to a monetary union due to greater economic convergence. Following the creation of EMU, Bayoumi and Eichengreen (1993) identify core countries as those exhibiting a higher degree of synchronization in demand and supply shocks and update the classification[^1] .
 
-In this study, we adopt the distinction proposed by Wächter et al. (2024)^[Wächter, Maybrit; Proano, Christian; Peña, Juan Carlos : How fitting is "one-size-fits-all"? Revisiting the dynamic effects of ECB's interest policy on euro area countries, BERG Working Paper Series, No. 199, 2024
-]. Their paper identifies 10 euro area countries as belonging to either core or periphery groups based on countries Taylor Rate Gaps (TRGAPs), defined as the deviation of the country-specific Taylor, or ideal, interest rate from the ECB policy rate.
-Therefore, the six core countries are Belgium, France, Germany, Luxembourg, the Netherlands, and Denmark (Denmark is excluded from the analysis as it is not part of the EMU). The group of periphery countries consists of Greece, Ireland, Italy, Portugal, and Spain. 
+[^1]: Nauro F. Campos, Corrado Macchiarelli, Core and Periphery in the European Monetary Union: Bayoumi and Eichengreen 25 years later, Economics Letters, LSE, Volume 147, 2016
 
-We then construct country vectors and include a qualitative group variable (“Core,” “Periphery,” “Other”) in the dataset. We illustrate this distinction using a map of Europe generated with the eurostat package, where core countries are highlighted in blue and periphery countries in red^[<https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>].
-(Note that the latest version of R is required to visualise the map.)
+In this study, we adopt the distinction proposed by Wächter et al. (2024)[^2]. Their paper identifies 10 euro area countries as belonging to either core or periphery groups based on countries Taylor Rate Gaps (TRGAPs), defined as the deviation of the country-specific Taylor, or ideal, interest rate from the ECB policy rate. Therefore, the six core countries are Belgium, France, Germany, Luxembourg, the Netherlands, and Denmark (Denmark is excluded from the analysis as it is not part of the EMU). The group of periphery countries consists of Greece, Ireland, Italy, Portugal, and Spain.
 
+[^2]: Wächter, Maybrit; Proano, Christian; Peña, Juan Carlos : How fitting is "one-size-fits-all"? Revisiting the dynamic effects of ECB's interest policy on euro area countries, BERG Working Paper Series, No. 199, 2024
+
+We then construct country vectors and include a qualitative group variable (“Core,” “Periphery,” “Other”) in the dataset. We illustrate this distinction using a map of Europe generated with the eurostat package, where core countries are highlighted in blue and periphery countries in red[^3]. (Note that the latest version of R is required to visualise the map.)
+
+[^3]: <https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>
 
 ```{r, echo = FALSE}
 #| message: false
@@ -600,7 +600,7 @@ desc_stats |>
   knitr::kable()
 ```
 
-The descriptive statistics show heterogeneity in corporate borrowing costs across country groups. Core countries have lower mean and median interest rates, 2.23% and 1.61% respectfully. In contrast, both periphery and other countries face higher borrowing costs, 3.29% and 3.31% in average. In addition, borrowing rates in periphery countries show greater dispersion, with slightly larger standard deviations. 
+The descriptive statistics show heterogeneity in corporate borrowing costs across country groups. Core countries have lower mean and median interest rates, 2.23% and 1.61% respectfully. In contrast, both periphery and other countries face higher borrowing costs, 3.29% and 3.31% in average. In addition, borrowing rates in periphery countries show greater dispersion, with slightly larger standard deviations.
 
 These results are consistent with our predictions. They suggest that firms in core countries benefit from lower interest rates than firms in periphery, despite a common monetary policy. However, they question the relevance of the classification of periphery countries, as they do not differ clearly from the unlabeled ones (they even show a lower average cost).
 
@@ -760,7 +760,7 @@ knitr::kable(
 )
 ```
 
-The model with a three-month lag minimizes both the AIC and BIC criteria. 
+The model with a three-month lag minimizes both the AIC and BIC criteria.
 
 ### An overview of causal inference
 
@@ -804,7 +804,7 @@ data |>
 correl <- cor(data$int, data$Mnet_lag3, use = "complete.obs")
 ```
 
-There is an negative slope at the EMU level, represented by the black dots and the OLS regression line. This suggests that higher QE intensity may reduce corporate borrowing costs. Core countries tend to lie below the fitted line while periphery countries are above it. 
+There is an negative slope at the EMU level, represented by the black dots and the OLS regression line. This suggests that higher QE intensity may reduce corporate borrowing costs. Core countries tend to lie below the fitted line while periphery countries are above it.
 
 However, the relationship lacks a clear structure, which makes the interpretation difficult. The pearson correlation is not close to -1 ($\rho$ = `r correl`).
 
@@ -859,15 +859,13 @@ p_peri <- ggplot(peri_data, aes(x = Mnet_lag3, y = int, color = Country)) +
 grid.arrange(p_core, p_peri, nrow = 1, ncol = 2)
 ```
 
-At the country and group level, we see that the slope is relatively homogeneous across core countries, indicating that there might be a stable relationship. For periphery countries, the relationship is more dispersed, estecially for the Greek slope. 
-However, the steeper slope observed for core countries appears to contradict the literature, which predicts a weaker response of corporate borrowing costs to quantitative easing in core economies.
-
+At the country and group level, we see that the slope is relatively homogeneous across core countries, indicating that there might be a stable relationship. For periphery countries, the relationship is more dispersed, estecially for the Greek slope. However, the steeper slope observed for core countries appears to contradict the literature, which predicts a weaker response of corporate borrowing costs to quantitative easing in core economies.
 
 ### Causal inference
 
 **A simple regression**
 
-We start with a very simple model : $$\text{Cost of borrowing}_t = \beta_0 + \beta_1  \text{Monthly QE}_{t-3} + \epsilon_t $$ A more accurate dynamic regression is made in the next section using a VAR framework.
+We start with a very simple model : $$\text{Cost of borrowing}_t = \beta_0 + \beta_1  \text{Monthly QE}_{t-3} + \epsilon_t $$
 
 Taking into account the nature of panel data and for simplicity, we make regressions on time series per country of the selected groups, and asses whether there is a difference between the coefficients.
 
@@ -1050,38 +1048,8 @@ for (ctry in countries) {
       var_results[[ctry]] <- model_var
       })
   } else {
-    message(paste("X Skipping", ctry, ": Insufficient data"))
   } 
 }
-
-core_countries <- model_data %>% filter(Group == "Core") %>% pull(Country) %>% unique()
-periphery_countries <- model_data %>% filter(Group == "Periphery") %>% pull(Country) %>% unique()
-get_irf_values <- function(ctry_code) {
-  if (!is.null(var_results[[ctry_code]])) {
-    res <- irf(var_results[[ctry_code]], impulse = "Mnet", response = "int", 
-               n.ahead = 10, ortho = FALSE, boot = FALSE)
-    return(as.vector(res$irf$Mnet))
-  }
-  return(NULL)
-}
-core_irfs <- map(core_countries, get_irf_values) %>% compact() %>% do.call(rbind, .) %>% colMeans()
-periph_irfs <- map(periphery_countries, get_irf_values) %>% compact() %>% do.call(rbind, .) %>% colMeans()
-plot_data <- data.frame(
-  Month = 0:10,
-  Core = core_irfs,
-  Periphery = periph_irfs
-) %>%
-  pivot_longer(cols = c(Core, Periphery), names_to = "Group", values_to = "Impact")
-ggplot(plot_data, aes(x = Month, y = Impact, color = Group, group = Group)) +
-  geom_line(linewidth = 1.5) +
-  geom_point(size = 3) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-  theme_minimal(base_size = 14) +
-  scale_color_manual(values = c("Core" = "#2c3e50", "Periphery" = "#e74c3c")) +
-  labs(title = "QE Transmission: Core vs. Periphery",
-       subtitle = "Aggregate Impulse Response of Corporate Rates to QE Shock",
-       x = "Months After Shock", 
-       y = "Response (Basis Points)")
 
 ts_it <- prep_country_var(model_data, "IT")
 model_it_stable <- VAR(ts_it, p = 2, type = "const")
@@ -1124,8 +1092,8 @@ irf_fr <- irf(model_fr_stable,
 ```
 
 ```{r, echo = FALSE}
-#| message : false
-#| warning : false
+#| message: false
+#| warning: false
 par(mfrow = c(2, 2))
 
 plot(irf_fr, main = "Shock to QE: France (Stable)")
@@ -1138,8 +1106,8 @@ Second, we created an aggregate visualization for core and peripheral countries.
 
 ```{r, echo = FALSE}
 
-#| warning = false
-#| message = false
+#| message: false
+#| warning: false
 
 core_countries <- model_data %>% filter(Group == "Core") %>% pull(Country) %>% unique()
 periphery_countries <- model_data %>% filter(Group == "Periphery") %>% pull(Country) %>% unique()
@@ -1176,3 +1144,11 @@ ggplot(plot_data, aes(x = Month, y = Impact, color = Group, group = Group)) +
 The findings suggest that the transmission of quantitative easing shocks is fundamentally asymmetric. In core countries like Germany and France, the immediate positive interest rate response likely reflects a signaling channel, where aggressive policy interventions lead to higher growth and inflation expectations, thus raising interest rates in the short term. Conversely, for peripheral countries such as Italy and Spain, policy impacts are probably filtered through more fragile banking systems and fluctuating sovereign risk perceptions.
 
 # Conclusion
+
+This study investigated the transmission of unconventional monetary policy (quantitative easing) by the European Central Bank across different eurozone countries and highlighted the heterogeneity in the corporate interest rate responses of different countries. Notably, referring to current literature, we focused on two subgroups of countries: The "core" member states of the EU, who generally have synchronized economic cycles and closer "ideal" interest rates to the EU target, and the "periphery" member states, whose "ideal" rates deviate from the ECB policy. The distinction between these two subgroups is essential for identifying potential misfits in EU-wide monetary policy.
+
+Our findings, however, illustrate that the impact of monetary policy on corporate interest rates is not straightforward for both core and periphery memebr states.
+
+Using a static OLS regression, we obtained extremely small coefficients from countries of both groups, which is not improved by introducing control variables. This highlights that the effect of quantitative easing may not be a one-time effect, warranting a dynamic model. Through our VAR analysis, we have seen that, in aggregate, interest rates in core countries have a delayed positive response towards a structural shock and quickly stabilize. Interest rates in periphery countries, however, have a more violent and volatile response with peaks across multiple periods..
+
+Thus, the findings illustrate that there is significant asymmetry in the direction and volatility of the responses of corporate interest rates in core and periphery countries, reflecting that the different economic structures and stabilities of these two country groups lead different mechanisms to be at play when quantitative easing shocks are felt. We can affirm that the financial fragmentation within the EMU should be addressed by country-level action. Overall, the pass-through of quantitative easing to interest rates for the private corporate sector is weak. To further examine the effect of quantitative easing on corporate interest rates, future studies could build upon our model by using culmulative measures of quantitative easing rather than monthly amounts.
