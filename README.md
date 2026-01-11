@@ -5,4 +5,5 @@ The final consolidated document is main.qmd and main.html.
 
 Zip uploaded on Moodle!
 
-Please note that the 4.4 version of R is required to plot the european map. 
+Please note that the latest version of R is required to load the Eurostat package and visualize the map. 
+Adding `#| eval=FALSE` to the code chunk of the map visualization (line 439) allows the rendering with earlier versions.
