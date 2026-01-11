@@ -769,7 +769,17 @@ We expect : lower coef, less significant for core Because more fixed term contra
 
 In our previous section, we have seen that the simple LM yielded very small coefficients. After switching to a 2SLS, the model yielded a very small positive coefficient for core countries and produced no significant coefficient for peripheral countries. Given that the impact of quantitative easing shocks may be felt across multiple time horizons, we decided that a static model may be insufficient.
 
-Therefore, in this part, we will to examine the the dynamic reactions of interest rates towards quantitative easing by conducting a VAR analysis.
+Therefore, in this part, we will to examine the the dynamic reactions of interest rates towards quantitative easing by conducting a VAR analysis and obtaining the Impulse Response Functions of the countries of interest.
+
+The general form of a VAR is as follows:
+
+Y_t = c + \Phi\*1 Y*{t-1} +* \Phi\*2 Y{t-2} + \dots + \Phi\*p Y\*{t-p} + \epsilon\_t
+
+The Impulse Response Function is defined as the reaction of Y towards a one-unit shock in the structural error term, its formula is:
+
+\text{IRF}(s) = \frac{\partial Y_{t+s}}{\partial \epsilon_{t}} = \Psi\_s
+
+In our scenario,
 
 ```{r, echo = FALSE, warning = FALSE, message = FALSE}
 
