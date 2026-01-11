@@ -607,7 +607,7 @@ See from the graph cost of borrowing is lower than EMU average for core countrie
 
 -   Graphical representation of discrepancy between corporate interest rates in EU countries and the EU average
 
-```{r}
+```{r, echo = FALSE}
 
 #| message: false
 #| warning: false
@@ -636,26 +636,6 @@ corp_int_deviation|>
     y = "Deviation from EMU Average Rate (Percentage Points)"
   ) +
   theme_minimal()
-
-#Preliminary visualization of the cross-country differences between their relationships with QE amounts
-
-library(ggeffects)
-
-qe_int <- qe_int |>
-  arrange(Country, DATE)
-
-qe_int <- qe_int |>
-  group_by(Country) |>
-  mutate(Mnet_lag1 = lag(Mnet, 1)) |> 
-  ungroup()
-
-qe_nona <- drop_na(qe_int)
-
-fit = lm(formula = int ~Mnet_lag1*Country, data=qe_nona)
-pred = ggpredict(fit, terms = c("Mnet_lag1","Country"))
-plot(pred) +
-  scale_color_viridis_d(option = "turbo") +
-  ggtitle(NULL)
 
 ```
 
