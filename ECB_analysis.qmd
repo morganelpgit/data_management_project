@@ -10,7 +10,6 @@ editor: visual
 
 <https://github.com/morganelpgit/data_management_project.git>
 
-
 # Research question
 
 How differently does quantitative easing by the ECB affect corporate borrowing costs in the eurozone ?
@@ -31,7 +30,7 @@ After loading and cleaning the data, we proceed with the empirical analysis as f
 
 ## Link to the sources
 
-To limit our research only to countries directly regulated by the European Central Bank, we have selected data only from the EMU. 
+To limit our research only to countries directly regulated by the European Central Bank, we have selected data only from the EMU.
 
 -   Quantitative Easing data : We are using the csv file "APP_breakdown_history" (click on the link "History of cumulative purchase breakdowns under the APP") downloaded from the webpage dedicated to the Asset Purchase Programme : <https://www.ecb.europa.eu/mopo/implement/app/html/index.en.html)>.
 
@@ -57,13 +56,13 @@ The ECB Data Portal <https://data.ecb.europa.eu/> is the European Central Bank's
 
 ### Target variable : Corporate borrowing rates
 
--   Corporate borrowing rates (Source: ECB data portal) : This is the weighted average annual interest rates of new loans for non-financial corporations in each country of the euro area. 
+-   Corporate borrowing rates (Source: ECB data portal) : This is the weighted average annual interest rates of new loans for non-financial corporations in each country of the euro area.
 
 ### Other variables
 
 -   Harmonised Index of Consumer Prices (HICP) (Source: ECB data portal). The HICP allows the calculation of inflation in each country and is highly related to the ECB’s decisions on monetary policy.
 
--   Short term rates : Euribor 3-month & 6-month - Historical close, average of observations through period, Euro area, Monthly (Source: ECB data portal). Euribor is determined by the ECB’s monetary policy. These values are the average interest rates in the interbank market, and serve as a benchmark for interest rates to all non-financial agents (therefore more general than the corporate borrowing rate, our target variable). These nominal rates are common across all Euro area. 
+-   Short term rates : Euribor 3-month & 6-month - Historical close, average of observations through period, Euro area, Monthly (Source: ECB data portal). Euribor is determined by the ECB’s monetary policy. These values are the average interest rates in the interbank market, and serve as a benchmark for interest rates to all non-financial agents (therefore more general than the corporate borrowing rate, our target variable). These nominal rates are common across all Euro area.
 
 -   Long-term interest rate – 10-year maturity – denominated in euro – Euro area 20 (Source: ECB data portal). This variable represents the yield on government bonds and is related to long-term financing conditions.
 
@@ -172,7 +171,6 @@ QE_mnet <- QE_mnet|>
 | Number of columns | `r QE_init_col` | `r ncol(QE_mnet)`       |
 | Number of rows    | `r QE_init_row` | `r nrow(QE_mnet)`       |
 | Number of NAs     | `r QE_init_na`  | `r sum(is.na(QE_mnet))` |
-
 
 ### Target variable : corporate borrowing rates
 
@@ -423,17 +421,17 @@ The identification of core and periphery countries is a crucial step in our anal
 
 [^1]: Nauro F. Campos, Corrado Macchiarelli, Core and Periphery in the European Monetary Union: Bayoumi and Eichengreen 25 years later, Economics Letters, LSE, Volume 147, 2016
 
-In this study, we adopt the distinction proposed by Wächter et al. (2024)[^2]. Their paper identifies 10 euro area countries as belonging to either core or periphery groups based on countries Taylor Rate Gaps (TRGAPs), defined as the deviation of the country-specific Taylor, or ideal, interest rate from the ECB policy rate. 
-
-Therefore, the five core countries are Belgium, France, Germany, Luxembourg and the Netherlands (Denmark was included but it is not part of the EMU). The group of periphery countries consists of Greece, Ireland, Italy, Portugal, and Spain.
+In this study, we adopt the distinction proposed by Wächter et al. (2024)[^2]. Their paper identifies 10 euro area countries as belonging to either core or periphery groups based on countries Taylor Rate Gaps (TRGAPs), defined as the deviation of the country-specific Taylor, or ideal, interest rate from the ECB policy rate.
 
 [^2]: Wächter, Maybrit; Proano, Christian; Peña, Juan Carlos : How fitting is "one-size-fits-all"? Revisiting the dynamic effects of ECB's interest policy on euro area countries, BERG Working Paper Series, No. 199, 2024
 
-We then construct country vectors and include a qualitative group variable (“Core,” “Periphery,” “Other”) in the dataset. We illustrate this distinction using a map of Europe generated with the `eurostat` package, where core countries are highlighted in blue and periphery countries in red[^3]. 
+Therefore, the five core countries are Belgium, France, Germany, Luxembourg and the Netherlands (Denmark was included but it is not part of the EMU). The group of periphery countries consists of Greece, Ireland, Italy, Portugal, and Spain.
 
-(Note that the latest version of R is required to load the eurostat package and visualise the map. Adding `#| eval=FALSE` to the following code chunk allows the rendering with earlier versions.)
+We then construct country vectors and include a qualitative group variable (“Core,” “Periphery,” “Other”) in the dataset. We illustrate this distinction using a map of Europe generated with the `eurostat` package, where core countries are highlighted in blue and periphery countries in red[^3].
 
 [^3]: <https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>
+
+(Note that the latest version of R is required to load the eurostat package and visualise the map. Adding `#| eval=FALSE` to the following code chunk allows the rendering with earlier versions.)
 
 ```{r, echo = FALSE}
 #| message: false
@@ -867,8 +865,7 @@ However, we find no evidence of such a difference, with an average of $\beta_1$ 
 
 **Adding control variables**
 
-Let us see whether adding control variables improves the robustness of the model. These controls include the price index, short-term interest rates, and long-term interest rates. $$\text{Cost of borrowing}_t = \beta_0 + \beta_1   \text{Monthly QE}_{t-3} + \beta_2 \text{HICP}_t + \beta_3 \text{3M rate}_t + \beta_3 \text{10Y rate}_t + \epsilon_t $$ 
-We take into account the sign of $\beta_1$, which is expected to be negative, its significance and the R2 of the model.
+Let us see whether adding control variables improves the robustness of the model. These controls include the price index, short-term interest rates, and long-term interest rates. $$\text{Cost of borrowing}_t = \beta_0 + \beta_1   \text{Monthly QE}_{t-3} + \beta_2 \text{HICP}_t + \beta_3 \text{3M rate}_t + \beta_3 \text{10Y rate}_t + \epsilon_t $$ We take into account the sign of $\beta_1$, which is expected to be negative, its significance and the R2 of the model.
 
 ```{r}
 #| echo: false
