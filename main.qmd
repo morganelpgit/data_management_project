@@ -765,7 +765,11 @@ mean(peri_tab$estimate)
 
 We expect : lower coef, less significant for core Because more fixed term contracts : interest rate vary less (cf litterature).
 
-### VAR 
+### VAR Analysis
+
+In our previous section, we have seen that the simple LM yielded very small coefficients. After switching to a 2SLS, the model yielded a very small positive coefficient for core countries and produced no significant coefficient for peripheral countries. Given that the impact of quantitative easing shocks may be felt across multiple time horizons, we decided that a static model may be insufficient.
+
+Therefore, in this part, we will to examine the the dynamic reactions of interest rates towards quantitative easing by conducting a VAR analysis.
 
 ```{r, echo = FALSE, warning = FALSE, message = FALSE}
 
@@ -887,7 +891,7 @@ plot(irf_es, main = "Shock to QE: Spain (Stable)")
 plot(irf_it, main = "Shock to QE: Italy (Stable)")
 ```
 
-Aggregate visualization
+Finally, we have created an aggregate visualization for core and peripheral countries. For core countries, a positive shock in quantitative easing policy leads to a positive reaction in interest rates around one month after the shock. Then, during subsequent periods, there are slight negative responses before interest rates finally stabilize. For peripheral countries, there is much greater volatility.
 
 ```{r, echo = FALSE}
 
