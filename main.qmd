@@ -476,13 +476,12 @@ data <- data |>
 
 We proceed with the empirical analysis as follows. First, we classify the countries of the monetary union into groups of core and periphery countries in line with the existing literature. Second, we visualize the evolution of the cost of borrowing at the national level and conduct a cross-country analysis to identify common patterns and divergences in the borrowing conditions. Finally, we estimate econometric models to assess whether there exists a significant relationship between asset purchases and the cost of borrowing, and if there is a difference in the coefficient between core and periphery. We also conduct a time series analysis with help of an ARMA model and impulse response functions.
 
-There exists a large litterature arguing that the ECB’s “one-size-fits-all” quantitative easing policy had differentiated effect on economic variables accross countries. In particular, we expect the coefficients capturing the effects of QE to be lower and less statistically significant for core countries than for periphery countries. In fact, average cost of borrowing rises less quickly in euro area countries where debt is contracted at a fixed rate and a long maturity, as is the case in France or other core countries (Gueuder and Ray (2023)^[Debt structure and rising interest rates: focus on European companies, Maxime Gueuder, Sébastien Ray, Banque de France, 2024]. 
 
 ## Framework and visualisations
 
 ### Core and periphery countries, a distinction from litterature
 
-Thus, the identification of core and periphery countries is a crucial step in our analysis. The development of the Optimum Currency Area (OCA) theory in the 1960s suggest that core countries are considered better suited to a monetary union due to greater economic convergence. Following the creation of EMU, Bayoumi and Eichengreen (1993) identify core countries as those exhibiting a higher degree of synchronization in demand and supply shocks and update the classification^[Nauro F. Campos, Corrado Macchiarelli, Core and Periphery in the European Monetary Union: Bayoumi and Eichengreen 25 years later, Economics Letters, LSE,
+The identification of core and periphery countries is a crucial step in our analysis. The development of the Optimum Currency Area (OCA) theory in the 1960s suggest that core countries are considered better suited to a monetary union due to greater economic convergence. Following the creation of EMU, Bayoumi and Eichengreen (1993) identify core countries as those exhibiting a higher degree of synchronization in demand and supply shocks and update the classification^[Nauro F. Campos, Corrado Macchiarelli, Core and Periphery in the European Monetary Union: Bayoumi and Eichengreen 25 years later, Economics Letters, LSE,
 Volume 147, 2016
 ] .
 
@@ -697,34 +696,127 @@ maybe add the Alyssa's visu of coefficients from phase 2 ?
 
 ## Models
 
-### Regression QE over int (regression morgane, dire qu’on a pas de résultat donc un var est plus approprié), scatterplots par groupes
+### Causal inference analysis 
 
-```{r, echo = FALSE}
+We aim to estimate the effect of QE on the corporate cost of borrowing.
+To identify the most appropriate specification, we conduct regressions using QE shocks and their lagged values at the aggregate level. 
+
+```{r}
+#| echo: false
 #| message: false
 #| warning: false
-data <- data |>
-  mutate(Mnet_lag1 = lag(Mnet, 1))
+
+dataU2 <- data |> filter(Country=="U2")
+dataU2_reg <- dataU2 |>
+  dplyr::select(DATE, Country, Mnet, int, ST3M, ST6M, LT10Y) |>
+  dplyr::group_by(Country) |>
+  dplyr::arrange(DATE, .by_group = TRUE) |>
+  dplyr::mutate(
+    Mnet = as.numeric(Mnet),
+    int  = as.numeric(int)
+  ) |>
+  dplyr::mutate(
+    Mnet_lag1  = dplyr::lag(Mnet, 1),
+    Mnet_lag2  = dplyr::lag(Mnet, 2),
+    Mnet_lag3  = dplyr::lag(Mnet, 3),
+    Mnet_lag4  = dplyr::lag(Mnet, 4),
+    Mnet_lag5  = dplyr::lag(Mnet, 5),
+    Mnet_lag6  = dplyr::lag(Mnet, 6),
+    Mnet_lag7  = dplyr::lag(Mnet, 7),
+    Mnet_lag8  = dplyr::lag(Mnet, 8),
+    Mnet_lag9  = dplyr::lag(Mnet, 9),
+    Mnet_lag10 = dplyr::lag(Mnet, 10),
+
+    ST3M_lag1  = dplyr::lag(ST3M, 1),
+    ST3M_lag2  = dplyr::lag(ST3M, 2),
+    ST3M_lag3  = dplyr::lag(ST3M, 3),
+    ST3M_lag4  = dplyr::lag(ST3M, 4),
+    ST3M_lag5  = dplyr::lag(ST3M, 5),
+    ST3M_lag6  = dplyr::lag(ST3M, 6),
+    ST3M_lag7  = dplyr::lag(ST3M, 7),
+    ST3M_lag8  = dplyr::lag(ST3M, 8),
+    ST3M_lag9  = dplyr::lag(ST3M, 9),
+    ST3M_lag10 = dplyr::lag(ST3M, 10),
+
+    ST6M_lag1  = dplyr::lag(ST6M, 1),
+    ST6M_lag2  = dplyr::lag(ST6M, 2),
+    ST6M_lag3  = dplyr::lag(ST6M, 3),
+    ST6M_lag4  = dplyr::lag(ST6M, 4),
+    ST6M_lag5  = dplyr::lag(ST6M, 5),
+    ST6M_lag6  = dplyr::lag(ST6M, 6),
+    ST6M_lag7  = dplyr::lag(ST6M, 7),
+    ST6M_lag8  = dplyr::lag(ST6M, 8),
+    ST6M_lag9  = dplyr::lag(ST6M, 9),
+    ST6M_lag10 = dplyr::lag(ST6M, 10),
+
+    LT10Y_lag1  = dplyr::lag(LT10Y, 1),
+    LT10Y_lag2  = dplyr::lag(LT10Y, 2),
+    LT10Y_lag3  = dplyr::lag(LT10Y, 3),
+    LT10Y_lag4  = dplyr::lag(LT10Y, 4),
+    LT10Y_lag5  = dplyr::lag(LT10Y, 5),
+    LT10Y_lag6  = dplyr::lag(LT10Y, 6),
+    LT10Y_lag7  = dplyr::lag(LT10Y, 7),
+    LT10Y_lag8  = dplyr::lag(LT10Y, 8),
+    LT10Y_lag9  = dplyr::lag(LT10Y, 9),
+    LT10Y_lag10 = dplyr::lag(LT10Y, 10)
+  ) |>
+  dplyr::ungroup()
+
+models <- list( lag0 = lm(int ~ Mnet, data = dataU2_reg), lag1 = lm(int ~ Mnet_lag1, data = dataU2_reg), lag2 = lm(int ~ Mnet_lag2, data = dataU2_reg), lag3 = lm(int ~ Mnet_lag3, data = dataU2_reg), lag4 = lm(int ~ Mnet_lag4, data = dataU2_reg), lag5 = lm(int ~ Mnet_lag5, data = dataU2_reg), lag6 = lm(int ~ Mnet_lag6, data = dataU2_reg), lag7 = lm(int ~ Mnet_lag7, data = dataU2_reg), lag8 = lm(int ~ Mnet_lag8, data = dataU2_reg), lag9 = lm(int ~ Mnet_lag9, data = dataU2_reg), lag10 = lm(int ~ Mnet_lag10, data = dataU2_reg) )
+
+aic_values <- AIC(
+  models$lag0, models$lag1, models$lag2, models$lag3, models$lag4,
+  models$lag5, models$lag6, models$lag7, models$lag8, models$lag9, models$lag10
+)
+
+bic_values <- BIC(
+  models$lag0, models$lag1, models$lag2, models$lag3, models$lag4,
+  models$lag5, models$lag6, models$lag7, models$lag8, models$lag9, models$lag10
+)
+
+aic_bic_table <- data.frame(
+  Model = names(models),
+  AIC = sapply(models, AIC),
+  BIC = sapply(models, BIC)
+)
+knitr::kable(
+  aic_bic_table,
+  digits = 3,
+  col.names = c("Model", "AIC", "BIC"),
+  caption = "Model Comparison Using AIC and BIC"
+)
 ```
 
-First, one regression per country without fixed effect (fixed effect doesn't work, use simple lm).
+The model with a three-month lag minimizes both the AIC and BIC criteria. Therefore we start with a very simple model : 
+$$\text{Cost of borrowing}_t = \beta_0 + \beta_1  \text{Monthly QE}_{t-3} + \epsilon_t $$
+A more accurate dynamic regression is made in the next section using a VAR framework.
 
-```{r, echo = FALSE}
+Taking into account the nature of panel data and for simplicity, we make regressions on time series per country of the selected groups, and asses whether there is a difference between the coefficients.  
+
+There exists a large literature arguing that the ECB’s “one-size-fits-all” quantitative easing policy had differentiated effect on economic variables across countries. In particular, we expect the coefficients capturing the effects of QE to be lower and less statistically significant for core countries than for periphery countries. In fact, average cost of borrowing rises less quickly in euro area countries where debt is contracted at a fixed rate and a long maturity, as is the case in France or other core countries (Gueuder and Ray (2023)^[Debt structure and rising interest rates: focus on European companies, Maxime Gueuder, Sébastien Ray, Banque de France, 2024]. 
+
+
+```{r}
+#| echo: false
 #| message: false
 #| warning: false
 library(broom)
-
-country_regs <- data |>
+data_reg <- data |>
+  filter(!Country=="U2") |>
+  mutate(Mnet_lag3 = dplyr::lag(Mnet, 3))
+  
+country_regs <- data_reg |>
   filter(Country != "U2") |>
   group_by(Country) |>
   do({
-    model <- lm(int ~ Mnet_lag1,data = .)
+    model <- lm(int ~ Mnet_lag3,data = .)
     tidy(model) |>
       mutate(r2 = glance(model)$r.squared)
   })
 
 # Create df of coefficient per country, their pvalue, r2 
 qe_country <- country_regs |>
-  filter(term == "Mnet_lag1") |>
+  filter(term == "Mnet_lag3") |>
   dplyr::select(Country, estimate, std.error, p.value, r2)
 
 qe_country <- qe_country |>
@@ -743,32 +835,83 @@ qe_country <- qe_country |>
       TRUE ~ ""
     )
   )
-
-qe_country
-```
-
-```{r, echo = FALSE}
-#| message: false
-#| warning: false
 # Difference core/periphery
 core_tab <- qe_country |>
-  filter(Group == "Core")
+  filter(Group == "Core") |>
+  dplyr::select(!Group)
 
 peri_tab <- qe_country |>
-  filter(Group == "Periphery")
+  filter(Group == "Periphery") |>
+  dplyr::select(!Group)
 
-core_tab
-peri_tab
-mean(core_tab$estimate) #average of estimates
-mean(peri_tab$estimate)
-
+core_tab|>
+  knitr::kable(digits=10)
+peri_tab|>
+  knitr::kable(digits=10)
 ```
 
-We expect : lower coef, less significant for core Because more fixed term contracts : interest rate vary less (cf litterature).
+However, we find no evidence of such a difference, with an average of $\beta_1$ = `r mean(core_tab$estimate)` for core countries and $\beta_1$ = `r mean(peri_tab$estimate)` for peripheral countries, despite a 5% significance of QE for all models. We also note that coefficients are very small, and the R2 is only of 3% for the case of Greece. 
+
+Let us see whether adding control variables improves the robustness of the model. These controls include the price index, short-term interest rates, and long-term interest rates.
+$$\text{Cost of borrowing}_t = \beta_0 + \beta_1   \text{Monthly QE}_{t-3} + \beta_2 \text{HICP}_t + \beta_3 \text{3M rate}_t + \beta_3 \text{10Y rate}_t  \epsilon_t $$
+We take into account the sign of $\beta_1$, which is expected to be negative, its significance and the R2 of the model.
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+country_regs <- data_reg |>
+  filter(Country != "U2") |>
+  group_by(Country) |>
+  do({
+    model <- lm(int ~ Mnet_lag3+HICP+ST3M+LT10Y,data = .)
+    tidy(model) |>
+      mutate(r2 = glance(model)$r.squared)
+  })
+
+
+# Create df of coefficient per country, their pvalue, r2 
+qe_country <- country_regs |>
+  filter(term == "Mnet_lag3") |>
+  dplyr::select(Country, estimate, std.error, p.value, r2)
+
+qe_country <- qe_country |>
+  mutate(Group = case_when(
+    Country %in% CORE ~ "Core",
+    Country %in% PERIPHERY ~ "Periphery",
+    Country %in% OTHER ~ "Other"
+  ))
+
+qe_country <- qe_country |>
+  mutate(
+    signif = case_when(
+      p.value < 0.01 ~ "***",
+      p.value < 0.05 ~ "**",
+      p.value < 0.10 ~ "*",
+      TRUE ~ ""
+    )
+  )
+# Difference core/periphery
+core_tab <- qe_country |>
+  filter(Group == "Core") |>
+  dplyr::select(!Group)
+
+peri_tab <- qe_country |>
+  filter(Group == "Periphery") |>
+  dplyr::select(!Group)
+
+core_tab|>
+  knitr::kable(digits=10)
+peri_tab|>
+  knitr::kable(digits=10)
+```
+
+Despite a higher R2, this model is not much more convincing as most estimates of $\beta_1$ become positive and less significant. 
+Several factors may explain this result. First, the absence of lagged variables may lead to misspecification. In addition, the inclusion of the price index may introduce endogeneity with respect to QE, as central banks calibrate asset purchases in response to inflation.
 
 ### VAR Analysis
 
-In our previous section, we have seen that the simple LM yielded very small coefficients. After switching to a 2SLS, the model yielded a very small positive coefficient for core countries and produced no significant coefficient for peripheral countries. Given that the impact of quantitative easing shocks may be felt across multiple time horizons, we decided that a static model may be insufficient.
+In our previous section, we have seen that the simple LM yielded very small coefficients. Given that the impact of quantitative easing shocks may be felt across multiple time horizons, we decided that a static model may be insufficient.
 
 Therefore, in this part, we will to examine the the dynamic reactions of interest rates towards quantitative easing by conducting a VAR analysis and obtaining the Impulse Response Functions of the countries of interest.
 
