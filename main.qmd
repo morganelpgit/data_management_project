@@ -504,9 +504,11 @@ data <- data |>
     Country %in% PERIPHERY ~ "Periphery",
     Country %in% OTHER ~ "Other"
   ))
+
+dataU2 <- data |> filter(Country=="U2")
 ```
 
-```{r}
+```{r, echo = FALSE}
 SHP_0 <- get_eurostat_geospatial(
   resolution = 10,
   nuts_level = 0,
@@ -571,23 +573,29 @@ Regarding the different programmes of the APP, the ECB first expanded two existi
 #| message: false
 #| warning: false
 
+
 desc_stats <- data |>
-  filter(DATE >= as.Date("2014-10-01")) |>
+  filter(DATE >= as.Date("2014-10-01"),
+         !is.na(Group)) |>
   group_by(Group) |>
   summarise(
-    n_obs   = n(),
+    n   = n(),
     mean    = mean(int, na.rm = TRUE),
     median  = median(int, na.rm = TRUE),
     sd      = sd(int, na.rm = TRUE),
     min     = min(int, na.rm = TRUE),
-    max     = max(int, na.rm = TRUE)
-  )
+    max     = max(int, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  knitr::kable()
 
 desc_stats
 ```
-Summary statistic indicates that less interest rate for core countries. 
 
--   time series analysis of int, trend cluster per country (history) facet wrap.
+The descriptive statistics show heterogeneity in corporate borrowing costs across country groups. Core countries have a a lower mean and median interest rates, of 2.23% and 1.61% respectfully. In contrast, both periphery and other countries face higher borrowing costs, 3.29% and 3.31% in average. In addition, borrowing rates in periphery countries show greater dispersion, with slightly larger standard deviations. 
+
+These results are consistent with our predictions. They suggest that firms in core countries benefit from lower interest rates than firms in periphery, despite a common monetary policy.
+However, they question the relevance of the classification of periphery countries, as they do not differ clearly from the unlabeled ones (they even show a lower average cost).
 
 ```{r, echo = FALSE}
 #| message: false
@@ -647,41 +655,10 @@ data |>
   theme_minimal()
 ```
 
-See from the graph cost of borrowing is lower than EMU average for core countries, and above average for periphery.
+First, let us look at the aggregate level. The black line shows the corporate interest rate over time. It shows a continuous decline from 2.59% in October 2014 to 1.36% in December 2021. Following quantitative tightening in 2022, financing costs increased sharply, reaching a peak of 5.28% in October 2023, before declining.
 
--   Graphical representation of discrepancy between corporate interest rates in EU countries and the EU average
-
-```{r, echo = FALSE}
-
-#| message: false
-#| warning: false
-
-#Preliminary visusalization of varying differences between corporate borrowing rates of each country and the EMU average 
-
-emu_avg_rates <- corp_int |>
-  drop_na() |>
-  filter(Country == "U2") |>
-  dplyr::select(DATE, EMU_Avg = int)
-
-corp_int_deviation <- corp_int |>
-  drop_na() |>
-  filter(Country != "U2") |>
-  left_join(emu_avg_rates, by = "DATE") |>
-  mutate(Deviation = int - EMU_Avg) |>
-  dplyr::select(-EMU_Avg)
-
-corp_int_deviation|>
-  ggplot(aes(x = DATE, y = Deviation, group = Country, color = Country)) +
-  geom_line(alpha = 0.7) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
-  labs(
-    title = "Corporate Borrowing Rate Deviation from EMU Average",
-    x = "Month/Year",
-    y = "Deviation from EMU Average Rate (Percentage Points)"
-  ) +
-  theme_minimal()
-
-```
+We then compare the two country groups. For core countries, borrowing costs are generally close to, or slightly below, the EMU average. By contrast, periphery countries exhibit higher borrowing costs, in particular Greece, Ireland, and Portugal prior to tighter policy in 2022.
+However, Italy, Spain, Belgium, and Germany do not notably differ from the EMU average.
 
 -   simple scatterplot qe/int (can't really compare if we facet per group)
 
