@@ -4,3 +4,5 @@ Regular commits and pushes were made in each individual quarto document, availab
 The final consolidated document is main.qmd and main.html. 
 
 Zip uploaded on Moodle!
+
+Please note that the 4.4 version of R is required to plot the european map. 

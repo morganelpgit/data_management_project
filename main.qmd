@@ -85,6 +85,9 @@ library(dplyr)
 library(tidyr)
 library(stringr)
 library(ggplot2)
+library(eurostat)
+library(sf)
+library(giscoR)
 ```
 
 ## Data Loading & Data Cleaning
@@ -171,11 +174,28 @@ QE_mnet <- QE_mnet|>
 | Number of rows    | `r QE_init_row` | `r nrow(QE_mnet)`       |
 | Number of NAs     | `r QE_init_na`  | `r sum(is.na(QE_mnet))` |
 
+
+Each data file downloaded from the ECB Data Portal is loaded and cleaned as follows:
+
+We start by loading the dataset from our data folder, and computing the original number of rows and columns. We use the function spec() with the col_types() argument to preserve the date format for `DATE`, and the numeric type for variables that are incorrectly recognized as logical.
+
+Two columns are for the date : `DATE` as a date,`TIME PERIOD` as a character. The others are the values for the twenty countries of the Euro Union. Each of these column corresponds to a full ECB series name, for example: `Financial account, Direct Investment, Net (BPS.M.N.IE.W1.S1.S1.T.N.FA.D.F5._Z.EUR._T._X.N.ALL)`. We rename each column by extracting the two letter country code from the series name, using the function ifelse.
+
+Next, we select all columns except `TIME PERIOD` (we will use `DATE` for joining). We also filter the observations from October 2014 to November 2025.
+
+Finally, we transform the dataset from wide format (months as rows, countries as columns) to long format (months and countries as rows), and left join to the full `data` dataset.
+
 ### Target variable : corporate borrowing rates
 
-Loading Data: Corporate borrowing rates per country (downloaded from the ECB data portal)
+Each data file downloaded from the ECB Data Portal is loaded and cleaned as follows:
 
-Data cleaning: Renaming variables & Pivoting
+We start by loading the dataset from our data folder, and computing the original number of rows and columns. We use the function spec() with the col_types() argument to preserve the date format for `DATE`, and the numeric type for variables that are incorrectly recognized as logical.
+
+Two columns are for the date : `DATE` as a date,`TIME PERIOD` as a character. The others are the values for the twenty countries of the Euro Union. Each of these column corresponds to a full ECB series name, for example: `Financial account, Direct Investment, Net (BPS.M.N.IE.W1.S1.S1.T.N.FA.D.F5._Z.EUR._T._X.N.ALL)`. We rename each column by extracting the two letter country code from the series name, using the function ifelse.
+
+Next, we select all columns except `TIME PERIOD` (we will use `DATE` for joining). We also filter the observations from October 2014 to November 2025.
+
+Finally, we transform the dataset from wide format (months as rows, countries as columns) to long format (months and countries as rows), and left join to the full `data` dataset.
 
 ```{r, echo = FALSE}
 #| message: false
@@ -236,18 +256,6 @@ qe_int <- left_join(QE_mnet,corp_int, by = join_by(DATE)
   )
 data1 <- qe_int
 ```
-
-### A few comments on data loading and cleaning
-
-Each data file downloaded from the ECB Data Portal is loaded and cleaned as follows:
-
-We start by loading the dataset from our data folder, and computing the original number of rows and columns. We use the function spec() with the col_types() argument to preserve the date format for `DATE`, and the numeric type for variables that are incorrectly recognized as logical.
-
-Two columns are for the date : `DATE` as a date,`TIME PERIOD` as a character. The others are the values for the twenty countries of the Euro Union. Each of these column corresponds to a full ECB series name, for example: `Financial account, Direct Investment, Net (BPS.M.N.IE.W1.S1.S1.T.N.FA.D.F5._Z.EUR._T._X.N.ALL)`. We rename each column by extracting the two letter country code from the series name, using the function ifelse.
-
-Next, we select all columns except `TIME PERIOD` (we will use `DATE` for joining). We also filter the observations from October 2014 to November 2025.
-
-Finally, we transform the dataset from wide format (months as rows, countries as columns) to long format (months and countries as rows), and left join to the full `data` dataset.
 
 ### Net investments
 
@@ -470,9 +478,9 @@ We proceed with the empirical analysis as follows. First, we classify the countr
 
 There exists a large litterature arguing that the ECB’s “one-size-fits-all” quantitative easing policy had differentiated effect on economic variables accross countries. In particular, we expect the coefficients capturing the effects of QE to be lower and less statistically significant for core countries than for periphery countries. In fact, average cost of borrowing rises less quickly in euro area countries where debt is contracted at a fixed rate and a long maturity, as is the case in France or other core countries (Gueuder and Ray (2023)^[Debt structure and rising interest rates: focus on European companies, Maxime Gueuder, Sébastien Ray, Banque de France, 2024]. 
 
-## Clustering choice (ref to litterature), code dans data, map
+## Framework and visualisations
 
-### Clustering with litterature
+### Core and periphery countries, a distinction from litterature
 
 Thus, the identification of core and periphery countries is a crucial step in our analysis. The development of the Optimum Currency Area (OCA) theory in the 1960s suggest that core countries are considered better suited to a monetary union due to greater economic convergence. Following the creation of EMU, Bayoumi and Eichengreen (1993) identify core countries as those exhibiting a higher degree of synchronization in demand and supply shocks and update the classification^[Nauro F. Campos, Corrado Macchiarelli, Core and Periphery in the European Monetary Union: Bayoumi and Eichengreen 25 years later, Economics Letters, LSE,
 Volume 147, 2016
@@ -481,7 +489,7 @@ Volume 147, 2016
 In this study, we adopt the distinction proposed by Wächter et al. (2024)^[Wächter, Maybrit; Proano, Christian; Peña, Juan Carlos : How fitting is "one-size-fits-all"? Revisiting the dynamic effects of ECB's interest policy on euro area countries, BERG Working Paper Series, No. 199, 2024
 ]. Their paper identifies 10 euro area countries as belonging to either core or periphery groups based on countries Taylor Rate Gaps (TRGAPs), defined as the deviation of the country-specific Taylor, or ideal, interest rate from the ECB policy rate.
 Therefore, the six core countries are Belgium, France, Germany, Luxembourg, the Netherlands, and Denmark (Denmark is excluded from the analysis as it is not part of the EMU). The group of periphery countries consists of Greece, Ireland, Italy, Portugal, and Spain. 
-We then construct country vectors and include a qualitative group variable (“Core,” “Periphery,” “Other”) in the dataset. We illustrate this distinction using a map generated with the eurostat package, where core countries are highlighted in blue and periphery countries in red^[<https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>].
+We then construct country vectors and include a qualitative group variable (“Core,” “Periphery,” “Other”) in the dataset. We illustrate this distinction using a map of Europe generated with the eurostat package, where core countries are highlighted in blue and periphery countries in red^[<https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>].
 
 ```{r, echo = FALSE}
 #| message: false
@@ -498,18 +506,36 @@ data <- data |>
   ))
 ```
 
+```{r}
+SHP_0 <- get_eurostat_geospatial(
+  resolution = 10,
+  nuts_level = 0,
+  year = 2016
+)
 
-## Visualisations : APP shares, ts of int, scatterplot
-
-
-```{r, echo = FALSE}
-#| message: false
-#| warning: false
-
+SHP_0 %>%
+  mutate(color_group = case_when(
+    id %in% c("BE", "FR", "DE", "LU", "NL") ~ "Core",
+    id %in%  c("GR", "IE", "IT", "PT", "ES") ~ "Periphery",
+    TRUE ~ "Other"
+  )) %>%
+  ggplot(aes(fill = color_group)) +
+  geom_sf(color = "white") +
+  scale_fill_manual(
+    values = c(
+      "Core" = "steelblue",
+      "Periphery" = "firebrick",
+      "Other" = "grey80"
+    ),
+    name = ""
+  ) +
+  scale_x_continuous(limits = c(-10, 35)) +
+  scale_y_continuous(limits = c(35, 65)) +
+  labs(title = "Identification of core and periphery countries of the EMU") +
+  theme_void()
 ```
 
-
--   share of the APP per type (CSPP etc) over time.
+### The Asset Purchase Programme
 
 ```{r, echo = FALSE}
 #| message: false
@@ -534,15 +560,16 @@ ggplot(QE_long, aes(x = DATE, y = Value, fill = Programme)) +
   scale_fill_viridis_d()
 
 ```
+The Asset Purchase Programme was initiated in mid 2014 to support the ECB's 2% objective after the sovereign debt crisis of 2010. Overall, net purchases continued until 2019. In 2020, the Covid-19 pandemic encouraged the ECB to maintain large-scale asset purchase, with an additional envelope of €120 billion. Net purchases ended in July 2022 and assets were sold ("quantitative tightening"), with a reduction of approximately €15 billion per month between March and June 2023.
 
-comments see <https://www.ecb.europa.eu/mopo/implement/app/html/index.en.html>
+Regarding the different programmes of the APP, the ECB first expanded two existing programmes, the ABSPP (Asset-backed Securities Purchase Programme) and the CBPP3 (Covered Bond Purchase Programme 3). In March 2015, the ECB introduced the PSPP (Public Sector Purchase Programme), which involved large-scale purchases of government and other public sector bonds. As we can see with the yellow bars, this component quickly became the dominant programme of the APP, peaking in May 2016 at approximately €79,673 million. When the trend reversed, the PSPP also accounted for the largest share of net asset sales. The CSPP (Corporate Sector Purchase Programme), launched in June 2016, also became an important part to total APP purchases.
 
+
+### Cost of borrowing : trends and differences
 
 ```{r, echo = FALSE}
 #| message: false
 #| warning: false
-
-library(dplyr)
 
 desc_stats <- data |>
   filter(DATE >= as.Date("2014-10-01")) |>
