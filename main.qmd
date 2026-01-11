@@ -1,16 +1,15 @@
 ---
 title: "The Effect of the Asset Purchase Programme on Corporate Borrowing Rates in the EMU: A Comparative Analysis of Core and Periphery Countries"
-author: "Yueran & Morgane"
+author: "Yueran & Morgane" 
 format:
   wordcount-html: default
 editor: visual
 ---
 
-(to delete) Header for pdf rendering title: "Main" author: "Yueran & Morgane" format: pdf: toc: true \# table of contents toc_depth: 1 \# depth of headings editor: visual
-
 # Link to the github project
 
 <https://github.com/morganelpgit/data_management_project.git>
+
 
 # Research question
 
