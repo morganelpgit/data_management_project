@@ -777,11 +777,15 @@ Y_t = c + \Phi\*1 Y*{t-1} +* \Phi\*2 Y{t-2} + \dots + \Phi\*p Y\*{t-p} + \epsilo
 
 The Impulse Response Function is defined as the reaction of Y towards a one-unit shock in the structural error term, its formula is:
 
-\text{IRF}(s) = \frac{\partial Y_{t+s}}{\partial \epsilon_{t}} = \Psi\_s
+\text{IRF}(s) = \frac{\partial y_{t+s}}{\partial \epsilon_{t}} = \Psi\_s
 
-In our scenario,
+In our scenario, the IRF would reflect the response of corporate interest rates towards a structural shock in quantitative easing policy.
 
-```{r, echo = FALSE, warning = FALSE, message = FALSE}
+In order to ensure the stability of our VAR's, we built a time series for each country using the first differences in each variable.
+
+First, we would like to look at IRF's of individual countries. Therefore, we selected 4 representative countries: France, Germany, Italy, and Spain. We can see in the results that, while there are visible effects for France and Germany, the responses of Italy and Spain seem to be highly volatile (as can be seen via the red dashed lines that represent the confidence intervals)
+
+```{r, echo = FALSE}
 
 library(vars)
 library(tseries)
@@ -828,71 +832,50 @@ for (ctry in countries) {
   } 
 }
 
-#apply(prep_country_var(model_data, "IT"), 2, var)
-
-# 2. Re-run a "Restricted" VAR for Italy specifically to fix the math
-# We force p = 2 to ensure the matrix is stable
 ts_it <- prep_country_var(model_data, "IT")
 model_it_stable <- VAR(ts_it, p = 2, type = "const")
 
-# 3. Run the IRF with 'ortho = FALSE' 
-# This bypasses the Cholesky decomposition error if the correlations are the issue
 irf_it <- irf(model_it_stable, 
               impulse = "Mnet", 
               response = "int", 
               n.ahead = 10, 
-              ortho = FALSE, # This is the key fix for the chol.default error
+              ortho = FALSE, 
               boot = TRUE)
-
-#apply(prep_country_var(model_data, "GR"), 2, var)
-
-# 2. Re-run a "Restricted" VAR for Italy specifically to fix the math
-# We force p = 2 to ensure the matrix is stable
 ts_es <- prep_country_var(model_data, "ES")
 model_es_stable <- VAR(ts_es, p = 2, type = "const")
 
-# 3. Run the IRF with 'ortho = FALSE' 
-# This bypasses the Cholesky decomposition error if the correlations are the issue
 irf_es <- irf(model_es_stable, 
               impulse = "Mnet", 
               response = "int", 
               n.ahead = 10, 
-              ortho = FALSE, # This is the key fix for the chol.default error
+              ortho = FALSE, 
               boot = TRUE)
 
-# 2. Re-run a "Restricted" VAR for Italy specifically to fix the math
-# We force p = 2 to ensure the matrix is stable
 ts_de <- prep_country_var(model_data, "DE")
 model_de_stable <- VAR(ts_de, p = 2, type = "const")
 
-# 3. Run the IRF with 'ortho = FALSE' 
-# This bypasses the Cholesky decomposition error if the correlations are the issue
 irf_de <- irf(model_de_stable, 
               impulse = "Mnet", 
               response = "int", 
               n.ahead = 10, 
-              ortho = FALSE, # This is the key fix for the chol.default error
+              ortho = FALSE, 
               boot = TRUE)
 
-# 2. Re-run a "Restricted" VAR for Italy specifically to fix the math
-# We force p = 2 to ensure the matrix is stable
 ts_fr <- prep_country_var(model_data, "FR")
 model_fr_stable <- VAR(ts_fr, p = 2, type = "const")
 
-# 3. Run the IRF with 'ortho = FALSE' 
-# This bypasses the Cholesky decomposition error if the correlations are the issue
 irf_fr <- irf(model_fr_stable, 
               impulse = "Mnet", 
               response = "int", 
               n.ahead = 10, 
-              ortho = FALSE, # This is the key fix for the chol.default error
+              ortho = FALSE, 
               boot = TRUE)
 
 ```
 
-Plotting for four specific countries
-
-```{r}
+```{r, echo = FALSE}
+#| message : false
+#| warning : false
 par(mfrow = c(2, 2))
 
 plot(irf_fr, main = "Shock to QE: France (Stable)")
@@ -901,7 +884,7 @@ plot(irf_es, main = "Shock to QE: Spain (Stable)")
 plot(irf_it, main = "Shock to QE: Italy (Stable)")
 ```
 
-Finally, we have created an aggregate visualization for core and peripheral countries. For core countries, a positive shock in quantitative easing policy leads to a positive reaction in interest rates around one month after the shock. Then, during subsequent periods, there are slight negative responses before interest rates finally stabilize. For peripheral countries, there is much greater volatility.
+Second, we created an aggregate visualization for core and peripheral countries. For core countries, a positive shock in quantitative easing policy leads to a positive reaction in interest rates around one month after the shock. Then, during subsequent periods, there are slight negative responses before interest rates finally stabilize. For peripheral countries, there is a large dip in corporate interest rates two months after the shock, with a rebound the following month, signifying greater volatility.
 
 ```{r, echo = FALSE}
 
@@ -939,5 +922,7 @@ ggplot(plot_data, aes(x = Month, y = Impact, color = Group, group = Group)) +
        x = "Months After Shock", 
        y = "Response (Basis Points)")
 ```
+
+The findings suggest that the transmission of quantitative easing shocks is fundamentally asymmetric. In core countries like Germany and France, the immediate positive interest rate response likely reflects a signaling channel, where aggressive policy interventions lead to higher growth and inflation expectations, thus raising interest rates in the short term. Conversely, for peripheral countries such as Italy and Spain, policy impacts are probably filtered through more fragile banking systems and fluctuating sovereign risk perceptions.
 
 # Conclusion
