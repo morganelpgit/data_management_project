@@ -85,9 +85,6 @@ library(dplyr)
 library(tidyr)
 library(stringr)
 library(ggplot2)
-library(eurostat)
-library(sf)
-library(giscoR)
 ```
 
 ## Data Loading & Data Cleaning
@@ -244,13 +241,11 @@ corp_int <- corp_int|>
 
 The remaining NAs originate from missing data for Hungary (HR) and three missing observations for Lithuania (LT). We will eventually remove this country’s values from the analysis.
 
-### First merge
-
-Merging corporate interest rates & QE datasets
-
 ```{r, echo = FALSE}
 #| message: false
 #| warning: false
+
+# First merge : Merging corporate interest rates & QE datasets
 qe_int <- left_join(QE_mnet,corp_int, by = join_by(DATE)
   )
 data1 <- qe_int
@@ -305,8 +300,6 @@ invest <- invest |>
 | Number of NAs     | `r invest_init_na`  | `r sum(is.na(invest))` |
 
 We decided to keep a complete dataset and select all the countries, resulting in a lot of missing values even after cleaning (AT, CY, IE, NL have no time series available). We will eventually delete these countries values for the analysis.
-
-We then join this dataset to the previous one.
 
 ```{r, echo = FALSE}
 data2 <- left_join(data1,invest,by=join_by(DATE,Country))
@@ -465,6 +458,11 @@ We still observe many NAs because Estonia is included, and its data only start i
 Before the analysis, we add a lag for the asset purchase amounts.
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
+# A bit of cleaning of the environment before analysis
+
 data <- data |>
   dplyr::select(-`Invest`) |> #Invest will not be used for the rest of the analysis
   mutate(Mnet_lag1 = lag(Mnet, 1)) 
@@ -488,6 +486,18 @@ In this study, we adopt the distinction proposed by Wächter et al. (2024)[^2]. 
 
 [^3]: <https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>
 
+The identification of core and periphery countries is a crucial step in our analysis. The development of the Optimum Currency Area (OCA) theory in the 1960s suggest that core countries are considered better suited to a monetary union due to greater economic convergence. Following the creation of EMU, Bayoumi and Eichengreen (1993) identify core countries as those exhibiting a higher degree of synchronization in demand and supply shocks and update the classification^[Nauro F. Campos, Corrado Macchiarelli, Core and Periphery in the European Monetary Union: Bayoumi and Eichengreen 25 years later, Economics Letters, LSE,
+Volume 147, 2016
+] .
+
+In this study, we adopt the distinction proposed by Wächter et al. (2024)^[Wächter, Maybrit; Proano, Christian; Peña, Juan Carlos : How fitting is "one-size-fits-all"? Revisiting the dynamic effects of ECB's interest policy on euro area countries, BERG Working Paper Series, No. 199, 2024
+]. Their paper identifies 10 euro area countries as belonging to either core or periphery groups based on countries Taylor Rate Gaps (TRGAPs), defined as the deviation of the country-specific Taylor, or ideal, interest rate from the ECB policy rate.
+Therefore, the six core countries are Belgium, France, Germany, Luxembourg, the Netherlands, and Denmark (Denmark is excluded from the analysis as it is not part of the EMU). The group of periphery countries consists of Greece, Ireland, Italy, Portugal, and Spain. 
+
+We then construct country vectors and include a qualitative group variable (“Core,” “Periphery,” “Other”) in the dataset. We illustrate this distinction using a map of Europe generated with the eurostat package, where core countries are highlighted in blue and periphery countries in red^[<https://stavrakoudis.econ.uoi.gr/r-eurostat/drawing-maps-of-europe.html#regions-of-europe>].
+(Note that the latest version of R is required to visualise the map.)
+>>>>>>> 003119b5408dd177550f924a93c91a3d47c4c5c1
+
 ```{r, echo = FALSE}
 #| message: false
 #| warning: false
@@ -506,6 +516,12 @@ dataU2 <- data |> filter(Country=="U2")
 ```
 
 ```{r, echo = FALSE, eval = FALSE}
+#| message: false
+#| warning: false
+library(eurostat)
+library(sf)
+library(giscoR)
+
 SHP_0 <- get_eurostat_geospatial(
   resolution = 10,
   nuts_level = 0,
@@ -562,9 +578,13 @@ ggplot(QE_long, aes(x = DATE, y = Value, fill = Programme)) +
 
 The Asset Purchase Programme was initiated in mid 2014 to support the ECB's 2% objective after the sovereign debt crisis of 2010. Overall, net purchases continued until 2019. In 2020, the Covid-19 pandemic encouraged the ECB to maintain large-scale asset purchase, with an additional envelope of €120 billion. Net purchases ended in July 2022 and assets were sold ("quantitative tightening"), with a reduction of approximately €15 billion per month between March and June 2023.
 
-Regarding the different programmes of the APP, the ECB first expanded two existing programmes, the ABSPP (Asset-backed Securities Purchase Programme) and the CBPP3 (Covered Bond Purchase Programme 3). In March 2015, the ECB introduced the PSPP (Public Sector Purchase Programme), which involved large-scale purchases of government and other public sector bonds. As we can see with the yellow bars, this component quickly became the dominant programme of the APP, peaking in May 2016 at approximately €79,673 million. When the trend reversed, the PSPP also accounted for the largest share of net asset sales. The CSPP (Corporate Sector Purchase Programme), launched in June 2016, also became an important part to total APP purchases.
+The Asset Purchase Programme was initiated in mid 2014 to support the ECB's 2% objective after the sovereign debt crisis of 2010. Overall, net purchases continued until 2019. In 2020, the Covid-19 pandemic encouraged the ECB to maintain large-scale asset purchase. Net purchases ended in July 2022 and assets were sold ("quantitative tightening"), with a reduction of approximately €15 billion per month between March and June 2023.
+
+Regarding the different programmes of the APP, the ECB first expanded two existing programmes, the ABSPP (Asset-backed Securities Purchase Programme) and the CBPP3 (Covered Bond Purchase Programme 3). In March 2015 was introduced the PSPP (Public Sector Purchase Programme), which involved large-scale purchases of government and other public sector bonds. As we can see with the yellow bars, this component quickly became the dominant programme of the APP, peaking in May 2016 at approximately €79,673 million. When the trend reversed, the PSPP also accounted for the largest share of net asset sales. The CSPP (Corporate Sector Purchase Programme), launched in June 2016, also became an important part to total APP purchases.
 
 ### Cost of borrowing : trends and differences
+
+**Some descriptive statistics**
 
 ```{r, echo = FALSE}
 #| message: false
@@ -589,9 +609,11 @@ desc_stats <- data |>
 desc_stats
 ```
 
-The descriptive statistics show heterogeneity in corporate borrowing costs across country groups. Core countries have a a lower mean and median interest rates, of 2.23% and 1.61% respectfully. In contrast, both periphery and other countries face higher borrowing costs, 3.29% and 3.31% in average. In addition, borrowing rates in periphery countries show greater dispersion, with slightly larger standard deviations.
+The descriptive statistics show heterogeneity in corporate borrowing costs across country groups. Core countries have lower mean and median interest rates, 2.23% and 1.61% respectfully. In contrast, both periphery and other countries face higher borrowing costs, 3.29% and 3.31% in average. In addition, borrowing rates in periphery countries show greater dispersion, with slightly larger standard deviations. 
 
 These results are consistent with our predictions. They suggest that firms in core countries benefit from lower interest rates than firms in periphery, despite a common monetary policy. However, they question the relevance of the classification of periphery countries, as they do not differ clearly from the unlabeled ones (they even show a lower average cost).
+
+**Trend comparison**
 
 ```{r, echo = FALSE}
 #| message: false
@@ -655,7 +677,7 @@ First, let us look at the aggregate level. The black line shows the corporate in
 
 We then compare the two country groups. For core countries, borrowing costs are generally close to, or slightly below, the EMU average. By contrast, periphery countries exhibit higher borrowing costs, in particular Greece, Ireland, and Portugal prior to tighter policy in 2022. However, Italy, Spain, Belgium, and Germany do not notably differ from the EMU average.
 
--   simple scatterplot qe/int (can't really compare if we facet per group)
+### An overview of causal inference
 
 ```{r, echo = FALSE}
 #| message: false
@@ -668,6 +690,7 @@ data |>
   mutate(Group2 = ifelse(Country == "U2", "U2", Group)) |>
   ggplot(aes(x = Mnet, y = int, color = Group2)) +
   geom_point(alpha = 0.5,size=1.5) +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +  # Droite MCO
   scale_color_manual(
     values = c(
       "Core" = "steelblue",
@@ -677,10 +700,9 @@ data |>
     )
   ) +
   labs(
-    title = "Corporate Borrowing Rate vs QE (Mnet)",
-    subtitle = "Color by country group, black = Euro area aggregate (U2)",
-    x = "Monthly ECB Net Asset Purchases (Mnet)",
-    y = "Corporate borrowing rate (int, %)",
+    title = "Corporate Borrowing Rate vs QE",
+    x = "Monthly ECB Net Asset Purchases (€M)",
+    y = "Corporate borrowing rate (%)",
     color = "Group"
   ) +
   theme_minimal()
